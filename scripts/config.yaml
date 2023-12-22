@@ -1,0 +1,29 @@
+keymappings:
+  hotbar:
+    - mouse4
+    - q
+    - e
+    - r
+    - mouse5
+    - "6"
+    - "7"
+    - "8"
+    - "9"
+  inventory: f
+  drop: g
+  sneak: shift
+
+sort_hotbar:
+  Sword: 0
+  Pickaxe: 1
+  Shears: 2
+  Axe: 3
+  Wool: 4
+
+window:
+  INV_X1: 0.33203125
+  INV_X9: 0.670703125
+  INV_Y: 0.7809027777
+
+network:
+  port: 1234
