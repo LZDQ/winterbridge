@@ -13,6 +13,9 @@ public class ClientModHandler {
     public static void registerKeys(RegisterKeyMappingsEvent event){
         event.register(ModKeyBindings.INSTANCE.KEY_SORT);
         event.register(ModKeyBindings.INSTANCE.KEY_TEST);
+        event.register(ModKeyBindings.INSTANCE.KEY_CANCEL);
+        event.register(ModKeyBindings.INSTANCE.KEY_BLOCKIN);
+        event.register(ModKeyBindings.INSTANCE.KEY_NINJA);
     }
 
 }

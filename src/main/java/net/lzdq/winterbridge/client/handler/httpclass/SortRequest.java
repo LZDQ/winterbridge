@@ -1,6 +1,6 @@
 package net.lzdq.winterbridge.client.handler.httpclass;
 
-class SortRequest {
+public class SortRequest {
     public String type;
     public String[] hotbar;
 

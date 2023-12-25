@@ -1,6 +1,9 @@
 {
   "item.winterbridge.sapphire": "Sapphire",
+  "key.categories.winterbridge": "WinterBridge",
   "key.winterbridge.key_sort": "Sort hotbar",
   "key.winterbridge.key_test": "Test",
-  "key.categories.winterbridge": "WinterBridge"
+  "key.winterbridge.key_cancel": "Cancel",
+  "key.winterbridge.key_blockin": "Block In",
+  "key.winterbridge.key_ninja": "Ninja Bridge"
 }

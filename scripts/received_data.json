@@ -1,14 +1,14 @@
 {
     "type": "sort",
     "hotbar": [
-        "[Fireball]",
-        "[Iron Ingot]",
-        "[Shears]",
+        "[Diamond Sword]",
         "[Wooden Pickaxe]",
-        "[Wooden Axe]",
-        "[Gold Ingot]",
-        "[Iron Sword]",
+        "[Golden Apple]",
+        "[Shears]",
         "[Red Wool]",
-        "[Air]"
+        "[Diamond]",
+        "[Stone Sword]",
+        "[Iron Ingot]",
+        "[Golden Ingot]"
     ]
 }

@@ -8,13 +8,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
-public class TestRequest {
+public class NinjaRequest {
     public String type;
     public Vec2 dir;
     public Vec3 pos;
     public Vec3 eye;
     public String blocks;
-    public TestRequest(Minecraft mc){
+    public NinjaRequest(Minecraft mc){
         LocalPlayer p = mc.player;
         this.type = "test";
         this.dir = p.getRotationVector();

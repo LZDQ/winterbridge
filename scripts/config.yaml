@@ -27,3 +27,7 @@ window:
 
 network:
   port: 1234
+
+mouse:
+  sensitivity_pitch: 0.15230980972222222
+  sensitivity_yaw: 0.152310937499999  # same
