@@ -16,6 +16,9 @@ public class ClientModHandler {
         event.register(ModKeyBindings.INSTANCE.KEY_CANCEL);
         event.register(ModKeyBindings.INSTANCE.KEY_BLOCKIN);
         event.register(ModKeyBindings.INSTANCE.KEY_NINJA);
+        event.register(ModKeyBindings.INSTANCE.KEY_INC3);
+        event.register(ModKeyBindings.INSTANCE.KEY_DIAGONAL);
+        event.register(ModKeyBindings.INSTANCE.KEY_DIAGINC);
     }
 
 }

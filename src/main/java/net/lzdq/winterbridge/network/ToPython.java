@@ -12,7 +12,7 @@ public class ToPython {
     public static void send(Object req){
         Gson gson = new Gson();
         String jsonContent = gson.toJson(req);
-        BridgeMod.LOGGER.info(jsonContent);
+        //BridgeMod.LOGGER.info(jsonContent);
 
         try{
             String url = "http://127.0.0.1:1234/";
@@ -35,8 +35,8 @@ public class ToPython {
             //BridgeMod.LOGGER.info(response.body());
 
         } catch (Exception e) {
-            BridgeMod.LOGGER.info("Exception");
-            e.printStackTrace();
+            //BridgeMod.LOGGER.info("Exception");
+            //e.printStackTrace();
         }
     }
 }

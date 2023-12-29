@@ -1,13 +1,12 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import json
-from util import config, cancel_t, get_window_info
+from util import config, get_window_info, latest_info, cancel_t
 from winterbridge import sort_items, block_in, test
-from threading import Thread
-import logging
+import threading
+import time
 
 logging.basicConfig(filename='server.log', level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 sensitivity_log = []
+timestamp = []
 
 class HTTPHandler(BaseHTTPRequestHandler):
 
@@ -30,6 +29,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
+        #t_s = time.time()
         content_length = int(self.headers['Content-Length'])
         # Read the data
         post_data = self.rfile.read(content_length)
@@ -51,44 +51,60 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
         # Handle to winterbridge
         thread = None
-        if data['type']=='sort':
-            thread = Thread(target=sort_items, args=(data['hotbar'],))
+        if type(data)==dict and 'type' in data.keys():
 
-        if data['type']=='test':
-            #print('Direction:', data['dir'])
-            #print('Position:', data['pos'])
-            #print('Eye:', data['eye'])
-            #print('Block:', data['blocks'])
-            thread = Thread(target=test, args=(
-                #(data['pos']['x'], data['pos']['y'], data['pos']['z']),
-                #(data['eye']['x'], data['eye']['y'], data['eye']['z']),
-                #(data['dir']['x'], data['dir']['y']),
-                list(data['pos'].values()),
-                list(data['eye'].values()),
-                list(data['dir'].values()),
-                data['blocks'],
-                ))
-            sensitivity_log.append(data['dir'])
-            if False and len(sensitivity_log)==2:
-                window = get_window_info()
-                # data['pos']['x'] is the pitch. Looking up: -90, looking down: 90
-                print('Sensitivity pitch:', (sensitivity_log[1]['x']-sensitivity_log[0]['x'])/(window.HEIGHT//4))
-                print('Sensitivity yaw:', (sensitivity_log[1]['y']-sensitivity_log[0]['y'])/(window.WIDTH//4))
+            if data['type']=='info':
+                with threading.Lock():
+                    latest_info = data
+
+            if data['type']=='sort':
+                thread = Thread(target=sort_items, args=(data['hotbar'],))
+
+            if data['type']=='test':
+                #print('Direction:', data['dir'])
+                #print('Position:', data['pos'])
+                #print('Eye:', data['eye'])
+                #print('Block:', data['blocks'])
+                thread = Thread(target=test, args=(
+                    #(data['pos']['x'], data['pos']['y'], data['pos']['z']),
+                    #(data['eye']['x'], data['eye']['y'], data['eye']['z']),
+                    #(data['dir']['x'], data['dir']['y']),
+                    list(data['pos'].values()),
+                    list(data['eye'].values()),
+                    list(data['dir'].values()),
+                    data['blocks'],
+                    ))
+                sensitivity_log.append(data['dir'])
+                if False and len(sensitivity_log)==2:
+                    window = get_window_info()
+                    # data['pos']['x'] is the pitch. Looking up: -90, looking down: 90
+                    print('Sensitivity pitch:', (sensitivity_log[1]['x']-sensitivity_log[0]['x'])/(window.HEIGHT//4))
+                    print('Sensitivity yaw:', (sensitivity_log[1]['y']-sensitivity_log[0]['y'])/(window.WIDTH//4))
 
 
-        if data['type']=='blockin':
-            thread = Thread(target=block_in, args=(
-                list(data['pos'].values()),
-                list(data['eye'].values()),
-                list(data['dir'].values()),
-                data['blocks'],
-                ))
+            if data['type']=='blockin':
+                thread = Thread(target=block_in, args=(
+                    list(data['pos'].values()),
+                    list(data['eye'].values()),
+                    list(data['dir'].values()),
+                    data['blocks'],
+                    ))
 
-        if data['type']=='cancel':
-            cancel_t = time.time()
+            if data['type']=='cancel':
+                cancel_op()
+
+        else:
+            # Test
+            #print(data)
+            #timestamp.append(time.time())
+            if False and len(timestamp)==1000:
+                print("Sec:", timestamp[-1]-timestamp[0])
+                exit()
 
         if thread:
             thread.start()
+        #t_t = time.time()
+        #print("This post costs:", t_t-t_s)
 
 
 httpd = HTTPServer(('', config.network.port), HTTPHandler)

@@ -1,14 +1,14 @@
 {
     "type": "sort",
     "hotbar": [
-        "[Diamond Sword]",
+        "[Wooden Sword]",
         "[Wooden Pickaxe]",
-        "[Golden Apple]",
-        "[Shears]",
+        "[Potion of Invisibility]",
+        "[Magic Milk]",
         "[Red Wool]",
-        "[Diamond]",
-        "[Stone Sword]",
-        "[Iron Ingot]",
-        "[Golden Ingot]"
+        "[Air]",
+        "[Wooden Axe]",
+        "[Shears]",
+        "[Air]"
     ]
 }

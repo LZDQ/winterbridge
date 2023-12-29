@@ -9,19 +9,28 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 public class NinjaRequest {
+    static int nx=3, ny=3, nz=3;
     public String type;
     public Vec2 dir;
     public Vec3 pos;
     public Vec3 eye;
-    public String blocks;
+    public String[][][] blocks;
     public NinjaRequest(Minecraft mc){
         LocalPlayer p = mc.player;
-        this.type = "test";
+        this.type = "ninja";
         this.dir = p.getRotationVector();
         this.pos = p.position();
         this.eye = p.getEyePosition();
-        BlockState blockState = mc.level.getBlockState(BlockPos.containing(pos.x, pos.y-1, pos.z));
-        Block block = blockState.getBlock();
-        this.blocks = block.getName().getString();
+        this.blocks = new String[nx][ny][nz];
+        for(int i=0; i<nx; i++)
+            for(int j=0; j<ny; j++)
+                for(int k=0; k<nz; k++){
+                    BlockState blockState = mc.level.getBlockState(BlockPos.containing(
+                            this.pos.x + i - (nx >> 1),
+                            this.pos.y + j - (ny >> 1),
+                            this.pos.z + k - (nz >> 1)));
+                    Block block = blockState.getBlock();
+                    this.blocks[i][j][k] = block.getName().getString();
+                }
     }
 }

@@ -1,16 +1,20 @@
-import pyautogui
 import platform
 import subprocess
 from collections import namedtuple
 from omegaconf import OmegaConf
-from pynput.mouse import Button, Controller, Listener
+import pynput
+from pynput.mouse import Button
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import threading
 
 config = OmegaConf.load('config.yaml')
-mouse = Controller()
-cancel_t = -1.
+mouse = pynput.mouse.Controller()
+cancel_t = 0.
+start_t = 0.
+latest_info = None
+
 
 if platform.system()=='Windows':
     button_mouse4 = Button.x1
@@ -42,10 +46,10 @@ def get_window_info():
 def get_hotbar_info():
     print('Now place your mouse onto the first slot in 10s')
     time.sleep(10)
-    x1, y1 = pyautogui.position()
+    x1, y1 = mouse.position
     print('Now place your mouse onto the last slot in 10s')
     time.sleep(10)
-    x2, y2 = pyautogui.position()
+    x2, y2 = mouse.position
     window = get_window_info()
     print('INV_X1:', (x1-window.X)/window.WIDTH)
     print('INV_X9:', (x2-window.X)/window.WIDTH)

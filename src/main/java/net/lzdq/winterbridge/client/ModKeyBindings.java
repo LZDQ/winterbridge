@@ -43,4 +43,25 @@ public final class ModKeyBindings {
             GLFW.GLFW_KEY_F6,
             CATEGORY
     );
+
+    public final KeyMapping KEY_INC3 = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_inc3",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F7,
+            CATEGORY
+    );
+
+    public final KeyMapping KEY_DIAGONAL = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_diagonal",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F8,
+            CATEGORY
+    );
+
+    public final KeyMapping KEY_DIAGINC = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_diaginc",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F9,
+            CATEGORY
+    );
 }

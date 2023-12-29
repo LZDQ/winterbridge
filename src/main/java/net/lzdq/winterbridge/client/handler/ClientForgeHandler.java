@@ -3,9 +3,7 @@ package net.lzdq.winterbridge.client.handler;
 import com.google.gson.Gson;
 import net.lzdq.winterbridge.BridgeMod;
 import net.lzdq.winterbridge.client.ModKeyBindings;
-import net.lzdq.winterbridge.client.handler.httpclass.BlockInRequest;
-import net.lzdq.winterbridge.client.handler.httpclass.SortRequest;
-import net.lzdq.winterbridge.client.handler.httpclass.TestRequest;
+import net.lzdq.winterbridge.client.handler.httpclass.*;
 import net.lzdq.winterbridge.network.ToPython;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -28,14 +26,15 @@ import java.net.http.HttpResponse;
 
 @Mod.EventBusSubscriber(modid=BridgeMod.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
 public class ClientForgeHandler {
-    Minecraft minecraft = Minecraft.getInstance();
+    static long t_1=0, poll=5; // poll frequency: 1ms
+    static boolean enable_info=false;
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) throws IOException {
-        Minecraft minecraft = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
+
         if(ModKeyBindings.INSTANCE.KEY_SORT.consumeClick()){
-            assert minecraft.player != null;
-            minecraft.player.displayClientMessage(Component.literal("Sort"), true);
-            Inventory inventory = minecraft.player.getInventory();
+            assert mc.player != null;
+            mc.player.displayClientMessage(Component.literal("Sort"), true);
             //for(int i=0; i<9; i++) inventory.items.set(i, new ItemStack(Items.DIAMOND, 10));
             /*
             int slot_weapon = -1, slot_pickaxe = -1, slot_shear = -1, slot_wool = -1, block_count = 0;
@@ -54,31 +53,52 @@ public class ClientForgeHandler {
             }
             //if(slot_weapon!=-1) inventory.setItem(slot_weapon, new ItemStack(Items.DIAMOND_SWORD));
              */
-            SortRequest req = new SortRequest();
-            for(int i=0; i<9; i++){
-                ItemStack item = inventory.getItem(i);
-                req.hotbar[i] = item.getDisplayName().getString();
-            }
 
-            ToPython.send(req);
+            ToPython.send(new SortRequest(mc));
 
         }
 
         if(ModKeyBindings.INSTANCE.KEY_BLOCKIN.consumeClick()){
-            BlockInRequest req = new BlockInRequest(minecraft);
-            ToPython.send(req);
+            enable_info = true;
+            ToPython.send(new BlockInRequest(mc));
         }
 
         if(ModKeyBindings.INSTANCE.KEY_NINJA.consumeClick()){
+            enable_info = true;
+            ToPython.send(new NinjaRequest(mc));
+        }
 
+        if(ModKeyBindings.INSTANCE.KEY_INC3.consumeClick()){
+            enable_info = true;
+            ToPython.send(new Inc3Request(mc));
         }
 
         if(ModKeyBindings.INSTANCE.KEY_TEST.consumeClick()){
-            assert minecraft.player != null;
-            minecraft.player.displayClientMessage(Component.literal("Test"), true);
+            enable_info = true;
+            assert mc.player != null;
+            mc.player.displayClientMessage(Component.literal("Test"), true);
             //  PacketHandler.sendToServer(new SSpawnEntityPacket());  // Spawn random entity
-            TestRequest req = new TestRequest(minecraft);
-            ToPython.send(req);
+            ToPython.send(new TestRequest(mc));
+        }
+
+        if(ModKeyBindings.INSTANCE.KEY_CANCEL.consumeClick()){
+            enable_info = false;
+            ToPython.send(new CancelRequest());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRenderTick(TickEvent.RenderTickEvent event) {
+        if(!enable_info) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) {
+            //ToPython.send("Hello from client");
+            long t_2 = System.currentTimeMillis();
+            if(t_2-t_1>poll){
+                t_1 = t_2;
+                ToPython.send(new InfoRequest(mc));
+            }
         }
     }
 }
+

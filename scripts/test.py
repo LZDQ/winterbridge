@@ -1,7 +1,7 @@
-from util import *
-from winterbridge import *
-import numpy as np
 import pyautogui
+from util import *
+#from winterbridge import *
+import numpy as np
 import matplotlib.pyplot as plt
 
 '''
@@ -23,11 +23,26 @@ for i in range(2,1): print("fuck")
 #get_sensitivity()
 
 
-#time.sleep(5); pyautogui.moveRel(100, 0)
-#time.sleep(5); pyautogui.moveRel(2560//4, 1440//4)
 
 #mouse.move(100,100)
 
-time.sleep(5); record_mouse()
+#time.sleep(5); record_mouse()
 
 #vis_mouse_log()
+
+'''
+time.sleep(1)
+pyautogui.keyUp('shiftleft')
+#pyautogui.keyUp('shiftleft')
+#pyautogui.keyUp('shiftright')
+time.sleep(5)
+pyautogui.keyDown('shiftleft')
+#pyautogui.press('a')
+time.sleep(1)
+#pyautogui.press('a')
+#pyautogui.keyUp('shiftleft')
+#pyautogui.keyUp('shiftright')
+pyautogui.keyUp('shiftleft')
+'''
+
+pyautogui.keyUp('space'); time.sleep(5); pyautogui.keyDown('space'); pyautogui.keyUp('space')
