@@ -25,6 +25,13 @@ public final class ModKeyBindings {
             CATEGORY
     );
 
+    public final KeyMapping KEY_RECORD = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_record",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_N,
+            CATEGORY
+    );
+
     public final KeyMapping KEY_CANCEL = new KeyMapping(
             "key." + BridgeMod.MODID + ".key_cancel",
             InputConstants.Type.KEYSYM,
@@ -37,31 +44,59 @@ public final class ModKeyBindings {
             GLFW.GLFW_KEY_T,
             CATEGORY
     );
+
+    public final KeyMapping KEY_PLAYERS = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_players",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_B,
+            CATEGORY
+    );
     public final KeyMapping KEY_NINJA = new KeyMapping(
-            "key." + BridgeMod.MODID + ".key_ninja",
+            "key." + BridgeMod.MODID + ".key_ninjabridge",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_F6,
             CATEGORY
     );
 
     public final KeyMapping KEY_INC3 = new KeyMapping(
-            "key." + BridgeMod.MODID + ".key_inc3",
+            "key." + BridgeMod.MODID + ".key_ninja_inc3",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_F7,
+            CATEGORY
+    );
+
+    public final KeyMapping KEY_INC2 = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_ninja_inc2",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F8,
             CATEGORY
     );
 
     public final KeyMapping KEY_DIAGONAL = new KeyMapping(
             "key." + BridgeMod.MODID + ".key_diagonal",
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_F8,
+            GLFW.GLFW_KEY_Y,
             CATEGORY
     );
 
     public final KeyMapping KEY_DIAGINC = new KeyMapping(
             "key." + BridgeMod.MODID + ".key_diaginc",
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_F9,
+            GLFW.GLFW_KEY_U,
+            CATEGORY
+    );
+
+    public final KeyMapping KEY_TELLY = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_tellybridge",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_J,
+            CATEGORY
+    );
+
+    public final KeyMapping KEY_GOD = new KeyMapping(
+            "key." + BridgeMod.MODID + ".key_godbridge",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_H,
             CATEGORY
     );
 }

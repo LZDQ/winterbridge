@@ -1,8 +1,8 @@
-import pyautogui
+#import pyautogui
 from util import *
 #from winterbridge import *
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 '''
 print(intersects((0.5, 1.62000000476837, 0.5), (0.0, -1.0, 0.0), (0, -1, 0)))
@@ -45,4 +45,20 @@ time.sleep(1)
 pyautogui.keyUp('shiftleft')
 '''
 
-pyautogui.keyUp('space'); time.sleep(5); pyautogui.keyDown('space'); pyautogui.keyUp('space')
+#pyautogui.keyUp('space'); time.sleep(5); pyautogui.keyDown('space'); pyautogui.keyUp('space')
+
+def test_freq():
+    t1 = time.time()
+    n = 1000
+    for _ in range(n):
+        mouse.move(1, 1)
+        #mouse.click(Button.right)
+        #mouse.press(Button.right); mouse.release(Button.right)
+    t2 = time.time()
+    print(f"{n} times within {t2-t1} second")
+
+#test_freq()
+
+disc = gen_line((-100, -50), (1, 1)); plt.scatter(x=[xy[0] for xy in disc], y=[xy[1] for xy in disc]); plt.show()
+
+

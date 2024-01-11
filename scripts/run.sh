@@ -1,1 +1,1 @@
-python network.py
+python launch.py --stats --no-cpulim

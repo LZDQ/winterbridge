@@ -1,18 +1,54 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import pyautogui
-import json
 import numpy as np
-import time
 from util import *
-import math
-import threading
-from threading import Thread
-import logging
+import shared
+from status import stats_parser
+from communicate import receive_packets
+from threading import Thread, Lock
+import os
+import time
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 #pyautogui.FAILSAFE = False
 
-#mouse.click(button_mouse4)
-poll = 0.005
 shift = config.keymappings.sneak
+
+def wait_info():
+    # Clear and wait for info. Will block until new info comes
+    # Return False if cancelled
+    t = time.time()
+    while True:
+        data = shared.pack_que.get()
+        tp = data['type']
+        if tp=='info':
+            #return data
+            if data['time'] >= t*1000:
+                return data
+        elif tp=='cancel':
+            shared.cancelled = True
+            shared.cancel_cause = data['cause']
+            return False
+        else:
+            update_skill(data)
+
+def last_info():
+    # Get the latest info. Will not block
+    # Return False if cancelled, None if no new info
+    info = None
+    while not shared.pack_que.empty():
+        data = shared.pack_que.get()
+        tp = data['type']
+        if tp=='info':
+            info = data
+        elif tp=='cancel':
+            shared.cancelled = True
+            shared.cancel_cause = data['cause']
+            return False
+        else:
+            update_skill(data)
+    return info
+
 
 def sort_items(items):
     n = len(items)
@@ -20,8 +56,8 @@ def sort_items(items):
     q = [-1] * n
     vis = [False] * n
     done = True
-    for i in range(n):
-        for name, slot in config.sort_hotbar.items():
+    for name, slot in config.sort_hotbar.items():
+        for i in range(n):
             if name in items[i]:
                 if q[slot]==-1:
                     p[i] = slot
@@ -29,12 +65,12 @@ def sort_items(items):
                     if i!=slot:
                         done = False
                 else:
-                    print("Error. Two " + name + " found")
+                    print("Already occupied:", name)
     if done:
         print('Already sorted')
         return
     window = get_window_info()
-    pyautogui.press(config.keymappings.inventory, interval=0.01)  # open menu
+    pyautogui.press(config.keymappings.inventory)  # open menu
     time.sleep(0.05)
     rec = []
     for i in range(n):
@@ -50,298 +86,477 @@ def sort_items(items):
             rec.append((u, v))
             u = v
     for i, (u, v) in enumerate(rec):
-        print("swap", u, "and", v)
+        #print("swap", u, "and", v)
         x_u = window.X + round(window.WIDTH * (config.window.INV_X1*(n-1-u) + config.window.INV_X9*u) / (n-1))
         y = window.Y + round(window.HEIGHT * config.window.INV_Y)
         #print("x", x_u, "y", y, 'key', config.keymappings.hotbar[v])
-        mouse.position = (x_u, y)  # hover
-        time.sleep(0.05 if i else 0.01)
+        ri.moveTo((x_u, y))
+        time.sleep(0.05 if i else 0.03)
         hotkey = config.keymappings.hotbar[v]
         if hotkey.startswith('mouse'):
-            if hotkey=='mouse4':
-                mouse.click(button_mouse4)
-            elif hotkey=='mouse5':
-                mouse.click(button_mouse5)
-            else:
-                print("Unrecognized mouse:", hotkey)
+            ri.click(hotkey, 0.01)
         else:
             pyautogui.press(hotkey, interval=0.01)  # press another hotbar key
         time.sleep(0.05 if i+1<len(rec) else 0.01)
-    pyautogui.press(config.keymappings.inventory, interval=0.01)
+    pyautogui.press(config.keymappings.inventory)
     return
 
-def block_in(position, eye, direction, blocks):
-    if True: return
-    start_t = time.time()
-    blockin = BlockIn(position, eye, direction, blocks)
-    blockin.work()
-    return
-
-def test(position, eye, direction, blocks):
-    #with threading.Lock(): print(latest_info)
-    direction = get_dir_vec3(*direction)
-    print("Position:", *position)
+def test(data):
+    direction = get_dir_vec3(*data['dir'].values())
+    pos_delta = np.array(list(data['pos_delta'].values()))
     print("Direction:", *direction)
-    #rotate_to(np.array([1.0, 0.0, 0.0]))
-    rotate_to(np.array([ 0.14412782,-0.97922529, 0.14263592]))
+    print("Pos Delta:", *pos_delta)
 
-def start_bridge():
-    # Press keys 's', 'd', shift
-    pyautogui.keyUp('s')
-    pyautogui.keyUp('d')
-    pyautogui.keyUp(shift)
-    pyautogui.keyUp('space')
-    time.sleep(0.01)
-    pyautogui.keyDown(shift)
-    time.sleep(0.1)
-    pyautogui.keyDown('s')
-    pyautogui.keyDown('d')
-    time.sleep(0.01)
+def record():
+    rec = []
+    lag = []
+    gap = []
+    t1 = None
+    while True:
+        info = wait_info()
+        if info is None:
+            break
+        rec.append(info)
+        lag.append(round(time.time()*1000)-info['time'])
+        t2 = info['time']
+        if t1 is not None:
+            gap.append(t2-t1)
+        t1 = t2
 
-def cancel_bridge():
-    print("Cancel")
-    pyautogui.keyDown(shift)
-    pyautogui.keyUp('s')
-    pyautogui.keyUp('d')
-    time.sleep(0.2)
-    pyautogui.keyUp(shift)
-
-def bridge_pos_dir(position, direction):
-    # Calculate bridge position and direction
-    if abs(direction[0]) > abs(direction[2]):
-        dir_go = np.array([
-            np.sign(direction[0]),
-            0,
-            ], dtype=np.int64)
-        dir2 = np.array([
-            config.bridge.direction[0] * np.sign(direction[0]),
-            config.bridge.direction[1],
-            config.bridge.direction[2] * np.sign(direction[0]),
-            ])
-        pos2 = np.array([
-            np.floor(position[0]) + 0.5 + config.bridge.position[0] * np.sign(direction[0]),
-            np.floor(position[2]) + 0.5 + config.bridge.position[1] * np.sign(direction[0])
-            ])
-        d_s = np.array([0., np.sign(direction[0])])
+    # Analyze
+    print(f"Lag: min {min(lag)} max {max(lag)} avg {np.mean(lag)}")
+    print(f"Gap: min {min(gap)} max {max(gap)} avg {np.mean(gap)}")
+    rec_pos = np.array([list(r['pos'].values()) for r in rec])
+    if abs(rec_pos[-1,0]-rec_pos[0,0]) > abs(rec_pos[-1,2]-rec_pos[0,2]):
+        rec_pos_side = rec_pos[:,:2]
     else:
-        dir_go = np.array([
-            0,
-            np.sign(direction[2]),
-            ], dtype=np.int64)
-        dir2 = np.array([
-            -config.bridge.direction[2] * np.sign(direction[2]),
-            config.bridge.direction[1],
-            config.bridge.direction[0] * np.sign(direction[2]),
-            ])
-        pos2 = np.array([
-            np.floor(position[0]) + 0.5 - config.bridge.position[1] * np.sign(direction[2]),
-            np.floor(position[2]) + 0.5 + config.bridge.position[0] * np.sign(direction[2])
-            ])
-        d_s = np.array([-np.sign(direction[2]), 0.])
-    return dir_go, dir2, pos2, d_s
+        rec_pos_side = rec_pos[:,:0:-1]
+    rec_pos_side[:,1] -= np.min(rec_pos_side[:,1])
+    plt.scatter(*zip(*rec_pos_side))
+    plt.savefig('record.png')
+    #os.system("xdg-open record.png")
+    plt.close()
+    rec_ground = [xy[0] for xy in rec_pos if xy[1]==0.]
+    for d in np.diff(rec_ground):
+        if d>1:
+            print("Leap:", d)
+    pos_deltas = [np.array(list(data['pos_delta'].values())) for data in rec]
+    delta_abs = [np.linalg.norm(pos_delta[::2]) for pos_delta in pos_deltas]
+    print(f"|pos_delta| 2D: min {min(delta_abs)} max {max(delta_abs)} avg {np.mean(delta_abs)}")
+    print("Total avg speed:",
+          np.linalg.norm(rec_pos[-1][::2] - rec_pos[0][::2]) / (rec[-1]['time'] - rec[0]['time']) * 1000)
+    return
 
-def bridge_adjust(dir_go, dir2, pos2, d_s):
-    # Adjust position
+class BaseSkill:
+    # Base class
+    def __init__(self, data):
+        self.position = np.array(list(data['pos'].values()))
+        self.direction = get_dir_vec3(*data['dir'].values())
+        self.blocks = np.array(data['blocks'])
+        self.player_pos = np.floor(self.position).astype(int)  # player's block pos
+        self.info_log = []
 
-    # Wait until reaching the edge
-    while True:
-        with threading.Lock():
-            if cancel_t > start_t:
-                cancel_bridge()
-                return False
-            position = np.array(list(latest_info['pos'].values())[::2])
-        dist = manh_dist(position * dir_go, pos2 * dir_go)
-        #print(dist)
-        time.sleep(poll)
-        if dist<0.1: break
-        #if time.time()-t1>3: break
-    print("Reached edge")
+    def get_block(self, block_pos):
+        return self.blocks[tuple(block_pos - self.player_pos + np.array(self.blocks.shape)//2)]
 
-    # Move to the correct side-axis
-    if manh_dist(position, pos2)>0.03:
-        if np.dot(d_s, pos2-position)>0:
-            # go s
-            key = 'd'
-        else:
-            key = 's'
-        pyautogui.keyUp(key)
-        print("Key:", key)
-        last_dist = 100.
-        while True:
-            with threading.Lock():
-                if cancel_t > start_t:
-                    cancel_bridge()
-                    return False
-                position = np.array(list(latest_info['pos'].values())[::2])
-            dist = manh_dist(position, pos2)
-            print("Position:", position)
-            print("Pos2:", pos2)
-            print(dist)
-            if dist<0.03 or dist>last_dist: break
-            last_dist = dist
-            time.sleep(poll)
-        pyautogui.keyDown(key)
-        time.sleep(0.01)
-    print("Position corrected")
-    return True
+    def set_block(self, block_pos, value):
+        self.blocks[tuple(block_pos - self.player_pos + np.array(self.blocks.shape)//2)] = value
 
-def ninja_1block(dir_go, pos2):
-    # 1 block forward
-
-    # From standing at the edge, to the next edge
-    t1 = time.time()
-    mouse.press(Button.right)
-    #pyautogui.rightClick()
-    pyautogui.keyUp(shift)
-    mouse.release(Button.right)
-
-    pos2 += dir_go
-
-    # Walk till near the edge
-    time_walk = np.random.randn() * 0.01 + 0.199
-    time_walk = np.clip(time_walk, 0.1, 0.2)
-    #time_walk = 0.2
-    # Wait for the delay
-    while True:
-        t2 = time.time()
-        if t2-t1+poll>=time_walk:
-            break
-        time.sleep(poll)
-    while True:
-        with threading.Lock():
-            if cancel_t > start_t:
-                cancel_bridge()
-                return False
-            position = np.array(list(latest_info['pos'].values())[::2])
-        dist = manh_dist(position * dir_go, pos2 * dir_go)
-        if True or dist<0.3:
-            pyautogui.keyDown(shift)
-            break
-        time.sleep(poll)
-    print("Start sneaking")
-
-    # Sneak till the edge
-    time_sneak = np.random.randn() * 0.001 + 0.02
-    time_sneak = np.clip(time_sneak, 0.01, 0.018)
-    #time_sneak = 0.02
-    time.sleep(time_sneak)
-    while True:
-        with threading.Lock():
-            if cancel_t > start_t:
-                cancel_bridge()
-                return
-            position = np.array(list(latest_info['pos'].values())[::2])
-        dist = manh_dist(position * dir_go, pos2 * dir_go)
-        print(dist)
-        if dist<0.1:
-            break
-        time.sleep(poll)
-    print("Reached new edge")
-    return True
-
-def ninja_1stair(dir_go, pos2):
-    # 1 block forward and upward
-
-    # From standing at the edge, to the next edge
-    t1 = time.time()
-    mouse.click(Button.right)
-    #pyautogui.rightClick()
-    pyautogui.keyDown('space')
-    time.sleep(0.01)
-    pyautogui.keyUp('space')
-    time.sleep(0.01)
-    mouse.click(Button.right)
-    time.sleep(0.01)
-    mouse.click(Button.right)
-
-    pos2 += dir_go
-
-    # Sneak till the edge
-    time_sneak = np.random.randn() * 0.001 + 0.02
-    time_sneak = np.clip(time_sneak, 0.01, 0.022)
-    #time_sneak = 0.02
-    time.sleep(time_sneak)
-    while True:
-        with threading.Lock():
-            if cancel_t > start_t:
-                cancel_bridge()
-                return
-            position = np.array(list(latest_info['pos'].values())[::2])
-        dist = manh_dist(position * dir_go, pos2 * dir_go)
-        print(dist)
-        if dist<0.1:
-            break
-        time.sleep(poll)
-    print("Reached new edge")
-    return True
-
-def ninja_bridge(position, eye, direction, blocks):
-    global start_t
-    start_t = time.time()
-    direction = get_dir_vec3(*direction)
-    dir_go, dir2, pos2, d_s = bridge_pos_dir(position, direction)
-    #print(dir2)
-    time.sleep(2)
-    rotate_to(dir2)
-    t1 = time.time()
-    start_bridge()
-    if not bridge_adjust(dir_go, dir2, pos2, d_s):
+    def cancel(self, cause=None):
+        self.end_t = time.time()
+        if cause is None:
+            cause = shared.cancel_cause
         return
 
-    # Start ninja bridge
-    #t1 = time.time()
-    while True:
-        if not ninja_1block(dir_go, pos2):
+    def set_info(self, info):
+        self.info_log.append(info)
+        self.position = np.array(list(info['pos'].values()))
+        # Do not update direction
+        self.blocks = np.array(info['blocks'])
+        self.player_pos = np.floor(self.position).astype(int)
+
+    def wait_info(self):
+        info = wait_info()
+        if info is False:
+            self.cancel()
+            return False
+        self.set_info(info)
+        return True
+
+    def last_info(self):
+        # Return True if not cancelled
+        info = last_info()
+        if info is None:
+            return True
+        if info is False:
+            return False
+        self.set_info(info)
+        return True
+
+
+
+class BaseBridge(BaseSkill):
+
+    def __init__(self, data):
+        super().__init__(data)
+        for s in ['ninja', 'god', 'telly']:
+            if data['type'].startswith(s):
+                self.tp = s
+        self.get_dir_go()  # get self.dir_go, a 2D int array to go
+        if self.get_block(self.player_pos - (0, 1, 0))=='Air':
+            self.begin_pos = self.player_pos - (self.dir_go[0], 0, self.dir_go[1])
+        else:
+            self.begin_pos = self.player_pos.copy()
+        self.start_y = self.position[1]
+        self.count_dis = 0
+
+    def set_info(self, info):
+        self.info_log.append(info)
+        position = list(info['pos'].values())
+        #self.pos_y = position[1]
+        if position[1] < self.start_y:
+            self.cancel('fell')
+            return False
+        self.position = np.array(position[::2])
+
+    def cancel(self, cause=None):
+        print("Cancel")
+        self.end_t = time.time()
+        if cause is None:
+            cause = shared.cancel_cause
+        if cause=='manual':
+            ri.keyDown(shift)
+            ri.keyDown('a')
+            ri.keyDown('w')
+            ri.keyUp('s')
+            ri.keyUp('d')
+            time.sleep(0.1)
+            ri.keyUp('a')
+            ri.keyUp('w')
+            ri.keyUp(shift)
+            ri.keyUp('space')
+        else:
+            # 'hit' or fell
+            ri.keyUp('s')
+            ri.keyUp('d')
+            ri.keyUp(shift)
+            ri.keyUp('space')
+
+    def get_dir_go(self):
+        r'''
+        Calculate bridge direction
+        This works for NinjaBridge and GodBridge. As for Telly, the direction is always same as which player's pointing.
+
+        The procedure is:
+        1. If the player is pointing down (pitch>30), the direction will be just as the 
+            player is starting to bridge (yaw+=135)
+        2. If the player is not pointing down (pitch<=30), go to the direction the player is pointing.
+            Sleep for 1s to avoid being banned.
+        3. If the player is not standing on a block, change the starting block_pos.
+        '''
+        pitch, yaw = get_pitch_yaw(self.direction)
+        position = self.player_pos
+
+        # Store raw direction to go in _dir
+        if self.tp!='telly' and pitch>30:
+            yaw += 135
+            _dir = get_dir_vec3(0., yaw)
+        else:
+            _dir = direction
+
+        # Get dir_go
+        if abs(_dir[0]) > abs(_dir[2]):
+            self.dir_go = np.array([
+                np.sign(_dir[0]),
+                0,
+                ], dtype=int)
+        else:
+            self.dir_go = np.array([
+                0,
+                np.sign(_dir[2]),
+                ], dtype=int)
+
+    def get_ninja_god_info(self):
+
+        dir_go = self.dir_go
+        position = self.player_pos
+        # Check whether the player is reaching out edge
+        if self.get_block(position - (0, 1, 0))=='Air':
+            begin_pos = position - (dir_go[0], 0, dir_go[1])
+
+        if self.tp=='ninja':
+            conf = config.ninjabridge
+        else:
+            conf = config.godbridge
+
+        # Get other info
+        if dir_go[0]:
+            self.dir_eye = np.array([  #  a 3D float array to look at
+                conf.direction[0] * dir_go[0],
+                conf.direction[1],
+                conf.direction[2] * dir_go[0],
+                ])
+            self.pos_edge = np.array([  # a 2D float array to sneak to
+                self.begin_pos[0] + 0.5 + conf.position[0] * dir_go[0],
+                self.begin_pos[2] + 0.5 + conf.position[1] * dir_go[0],
+                ])
+            self.d_s = np.array([0, dir_go[0]])  # a 2D int array. dir when pressing 's'
+        else:
+            self.dir_eye = np.array([
+                -conf.direction[2] * dir_go[1],
+                conf.direction[1],
+                conf.direction[0] * dir_go[1],
+                ])
+            self.pos_edge = np.array([
+                self.begin_pos[0] + 0.5 - conf.position[1] * dir_go[1],
+                self.begin_pos[2] + 0.5 + conf.position[0] * dir_go[1],
+                ])
+            self.d_s = np.array([-dir_go[1], 0])
+
+    def ninja_god_adjust(self):
+        # Enable hotkey, adjust position and direction
+
+        ri.keyDown(shift)
+        rotate_fast(self.dir_eye, self.direction)
+        ri.keyDown('s')
+        ri.keyDown('d')
+        #breakpoint()
+
+        # Wait until reaching the edge
+        while True:
+            if not self.wait_info():
+                return False
+            dist = self.get_dist()
+            #print(dist)
+            if dist<0.1: break
+        print("Reached edge")
+
+        # Move to the correct side-axis
+        if manh_dist(self.position, self.pos_edge)>0.03:
+            if np.dot(self.d_s, self.pos_edge - self.position)>0:
+                # go s
+                key = 'd'
+            else:
+                key = 's'
+            ri.keyUp(key)
+            #print("Key:", key)
+            last_dist = 100.
+            while True:
+                if not self.wait_info():
+                    return False
+                dist = manh_dist(self.position, self.pos_edge)
+                #print("Position:", position)
+                #print("Pos2:", pos2)
+                #print(dist)
+                if dist<0.03 or dist>last_dist: break
+                last_dist = dist
+            ri.keyDown(key)
+            time.sleep(0.01)
+        print("Position corrected")
+        return True
+
+    def get_dist(self):
+        # Get the (directed) distance between position and pos_edge
+        return np.dot(self.pos_edge - self.position, self.dir_go)
+
+    def analyze(self):
+        print(f"Avg speed: {self.count_dis / (self.end_t - self.start_t)}")
+
+
+class NinjaBridge(BaseBridge):
+    step_forward = None
+    left_upward = None
+    left_forward = None
+
+    def __init__(self, data):
+        super().__init__(data)
+        self.get_ninja_god_info()
+
+    def ninja_1block(self):
+        # 1 block forward
+
+        # From standing at the edge, to the next edge
+        ri.rightDown()
+        ri.keyUp(shift)
+        time.sleep(0.05)
+        ri.rightUp()
+
+        self.pos_edge += self.dir_go
+
+        # Walk till near the edge
+        #time_walk = np.random.randn() * 0.01 + 0.209
+        #time_walk = np.clip(time_walk, 0.2, 0.21)
+        time_walk = 0.18
+        # Wait for the delay
+        time.sleep(time_walk)
+        #print("Start sneaking")
+
+        # Sneak till the edge
+        #time_sneak = np.random.randn() * 0.001 + 0.02
+        #time_sneak = np.clip(time_sneak, 0.01, 0.01)
+        time_sneak = 0.02
+        ri.keyDown(shift)
+        time.sleep(time_sneak)
+        while True:
+            if not self.wait_info():
+                return False
+            dist = self.get_dist()
+            print(dist)
+            if dist<0.05:
+                break
+            print("Not breaked")
+        print("------------------------------------------------------------------")
+        return True
+
+    def ninja_1stair(self):
+        # 1 block forward and upward
+
+        # From standing at the edge, to the next edge
+        ri.rightDown()
+        ri.keyUp(shift)
+        time.sleep(0.05)
+        ri.rightUp()
+        time.sleep(0.05)
+        ri.keyDown(shift)
+
+        ri.press('space', 0.05)
+        time.sleep(0.06)
+        ri.rightClick(0.01)
+        ri.rightClick(0.01)
+
+        self.pos_edge += self.dir_go
+
+        # Sneak till the edge
+        #time_sneak = np.random.randn() * 0.001 + 0.02
+        #time_sneak = np.clip(time_sneak, 0.01, 0.022)
+        time_sneak = 0.02
+        time.sleep(time_sneak)
+        while True:
+            if not self.wait_info():
+                return False
+            dist = self.get_dist()
+            print(dist)
+            if dist<0.05:
+                break
+        print("Reached new edge")
+        return True
+
+    def ninja_bridge(self, style):
+        if not self.ninja_god_adjust():
             return
 
-    pyautogui.keyUp('s')
-    pyautogui.keyUp('d')
-    time.sleep(0.2)
-    pyautogui.keyUp(shift)
-    return
+        # Start ninja bridge
+        if style=='ninjabridge':
+            step_forward = None
+            left_upward = 0
+            left_forward = 10000
+        elif style=='ninja_inc2':
+            step_forward = 2
+            left_upward = 10000
+            left_forward = 2
+        elif style=='ninja_inc3':
+            step_forward = 3
+            left_upward = 5
+            left_forward = 3
 
-def inc3_bridge(position, eye, direction, blocks):
-    global start_t
-    start_t = time.time()
-    direction = get_dir_vec3(*direction)
-    dir_go, dir2, pos2, d_s = bridge_pos_dir(position, direction)
-    #print(dir2)
-    time.sleep(2)
-    rotate_to(dir2)
-    t1 = time.time()
-    start_bridge()
-    if not bridge_adjust(dir_go, dir2, pos2, d_s):
-        return
+        self.start_t = time.time()
+        while True:
+            if left_upward>0 and left_forward==1:
+                if not self.ninja_1stair():
+                    return
+                left_forward = step_forward
+                left_upward -= 1
+            else:
+                if not self.ninja_1block():
+                    return
+                left_forward -= 1
 
-    # Start ninja bridge
-    #t1 = time.time()
-    left_forward = 1
-    left_upward = 5
-    num_forward = 3
-    while True:
-        if left_upward>0 and left_forward==1:
-            print("Fuck")
-            if not ninja_1stair(dir_go, pos2):
+            with Lock():
+                if NinjaBridge.step_forward is not None:
+                    step_forward = NinjaBridge.step_forward
+                    NinjaBridge.step_forward = None
+                if NinjaBridge.left_forward is not None:
+                    left_forward = NinjaBridge.left_forward
+                    NinjaBridge.left_forward = None
+                if NinjaBridge.left_upward is not None:
+                    left_upward = NinjaBridge.left_upward
+                    NinjaBridge.left_upward = None
+
+            self.count_dis += 1
+
+
+class GodBridge(BaseBridge):
+    # God Bridge is not available
+
+    def __init__(self, data):
+        super().__init__(data)
+        self.get_ninja_god_info()
+
+    def god_1block(self):
+        # Wait and place
+
+        t1 = time.time()
+        self.pos_edge += self.dir_go
+
+        while True:
+            if not self.wait_info():
+                return False
+            dist = self.get_dist()
+            print(dist)
+            if dist<0.7:
+                break
+            print("Not breaked")
+
+        # Get speed
+        ticks = 1
+        speed = 0.
+        for i in range(ticks):
+            speed += np.dot(list(self.info_log[-1-i]['pos_delta'].values())[::2], self.dir_go)
+        speed /= ticks
+        speed *= 20
+        dt = self.info_log[-1]['time'] / 1e3 + np.dot(self.pos_edge - self.position, self.dir_go) / speed
+        dt -= time.time()
+        print("Speed:", speed)
+        print("Sleep for:", dt)
+        dt += -0.05
+        time.sleep(dt)
+        ri.rightClick(0.001)
+        time.sleep(0.05)
+        ri.rightClick(0.001)
+        time.sleep(0.05)
+        ri.rightClick(0.001)
+        time.sleep(0.05)
+
+        t2 = time.time()
+        print("Time:", t2-t1)
+        return True
+
+    def god_bridge(self):
+        if not self.ninja_god_adjust():
+            return
+        ri.rightDown()
+        ri.keyUp(shift)
+        time.sleep(0.001)
+        ri.rightUp()
+
+        # Start god bridge
+        left_forward = 8
+        while True:
+            if left_forward==1:
+                break
+            else:
+                left_forward -= 1
+            if not self.god_1block():
                 return
-            left_forward = num_forward
-            left_upward -= 1
-        else:
-            if not ninja_1block(dir_go, pos2):
-                return
-            left_forward -= 1
+            print("                                          --------------------")
 
-    pyautogui.keyUp('s')
-    pyautogui.keyUp('d')
-    time.sleep(0.2)
-    pyautogui.keyUp(shift)
-    return
 
 def test_pointing(position, eye, direction, blocks):
     position = np.array(position)
     direction = get_dir_vec3(*direction)
     blocks = np.array(blocks)
     eye = np.array(eye)
-    eye_blockpos = eye.astype(np.int64)
+    eye_blockpos = np.floor(eye).astype(np.int64)
     print('Eye', eye[0], eye[1], eye[2])
     print('Position', position[0], position[1], position[2])
     res = None
@@ -362,194 +577,83 @@ def test_pointing(position, eye, direction, blocks):
         print("Not pointing")
     return
 
-def get_dir_vec3(pitch, yaw):  # GPT4
-    # Convert angles to radians
-    yaw_rad = math.radians(yaw)
-    pitch_rad = math.radians(pitch)
+def rotate_fast(dir2, dir1, duration=0.05):
+    #print("Duration:", duration)
+    t1 = time.time()
+    _t1 = t1
+    pixel_x, pixel_y = get_rotate_pixel(dir2, dir1)
+    if max(abs(pixel_x), abs(pixel_y)) <= 1:
+        return
+    points = gen_line((0, 0), (pixel_x, pixel_y), (abs(pixel_x)+abs(pixel_y))//5+2)
+    points = np.round(points).astype(int)
+    #print("Pixel:", (0, 0), (pixel_x, pixel_y))
+    #print("Smooth:", points[0], points[-1])
+    m = min(100, len(points)-1)
+    #print("m:", m)
+    t2 = time.time()#; print("Gen line:", t2-t1); t1 = t2
+    left_time = duration - (t2 - _t1)
+    left_time *= 0.85
+    for i in range(m):
+        p1 = points[round((len(points)-1)*i/m)]
+        p2 = points[round((len(points)-1)*(i+1)/m)]
+        #print("From", p1, "to", p2)
+        d = p2-p1
+        if np.sum(np.abs(d))==0:
+            continue
+        #print("Move", *d)
+        #mouse.move(*d)
 
-    # Calculate direction vector components
-    x = -math.sin(yaw_rad) * math.cos(pitch_rad)
-    y = -math.sin(pitch_rad)
-    z = math.cos(yaw_rad) * math.cos(pitch_rad)
+        ri.move(d)
 
-    direction = np.array([x,y,z])
-    #print("dir len:", np.linalg.norm(direction))
-    #print("Pointing:", *direction)
-    return direction
+        time.sleep(left_time/m)
 
-def get_pitch_yaw(direction):
-    pitch_rad = math.asin(-direction[1])
-    yaw_rad = -math.atan2(direction[0], direction[2])
-    pitch, yaw = math.degrees(pitch_rad), math.degrees(yaw_rad)
-    return pitch, yaw
-
-def get_block(blocks, player_pos, pos):
-    # player_pos contains integer
-    pos = pos - player_pos + np.array(blocks.shape)//2
-    #print(*pos)
-    return blocks[tuple(pos)]
-
-def set_block(blocks, player_pos, pos, value):
-    # player_pos contains integer
-    pos = pos - player_pos + np.array(blocks.shape)//2
-    blocks[tuple(pos)] = value
+    t2 = time.time()#; print("Move mouse:", t2-t1); t1 = t2
+    if t2 - _t1 < duration:
+        time.sleep(duration - (t2 - _t1))
+    #print("Total:", t2-_t1)
     return
 
-def rotate_to(dir2):
-    t1 = 0.
-    poll = 0.05
-    pitch2, yaw2 = get_pitch_yaw(dir2)
-    while True:
-        t2 = time.time()
-        if t2-t1>poll:
-            with threading.Lock():
-                if cancel_t > start_t: return
-                #print(latest_info)
-                pitch1, yaw1 = latest_info['dir'].values()
-            t1 = t2
-        pitch, yaw = pitch2-pitch1, yaw2-yaw1
-        yaw %= 360
-        if yaw>180: yaw-=360
-        pixel_x = round(yaw / config.mouse.sensitivity_yaw)
-        pixel_y = round(pitch / config.mouse.sensitivity_pitch)
-        mi = min(abs(pixel_x), abs(pixel_y)) + 1
-        dx, dy = round(pixel_x / mi), round(pixel_y / mi)
-        if abs(dx)+abs(dy)<=0:
-            return
-        max_d = 5
-        if abs(dx)>max_d:
-            dx = max_d * np.sign(dx)
-        if abs(dy)>max_d:
-            dy = max_d * np.sign(dy)
-        mouse.move(dx, dy)
-        yaw1 += dx * config.mouse.sensitivity_yaw
-        pitch1 += dy * config.mouse.sensitivity_pitch
-        time.sleep(0.005)
-    return
+class BlockIn(BaseSkill):
 
-def rotate_2(dir1, dir2):  # deprecated
-    yaw1, pitch1 = get_yaw_pitch(dir1)  # in degrees
-    yaw2, pitch2 = get_yaw_pitch(dir2)
-    yaw, pitch = yaw2-yaw1, pitch2-pitch1
-    if yaw>180: yaw-=360
-    if yaw< -180: yaw+=360
-    pixel_x = round(yaw / config.mouse.sensitivity_yaw)
-    pixel_y = round(pitch / config.mouse.sensitivity_pitch)
-    print("New yaw, pitch:", yaw2, pitch2)
-    print("Change yaw, pitch:", yaw, pitch)
-    print("Pixel x:", pixel_x)
-    print("Pixel y:", pixel_y)
-    #time.sleep(1)
-    def gen_gap(pixel, speed):
-        # speed: How many pixels per ms
-        n = abs(pixel)
-        gap = np.random.uniform(0.9/speed, 1.1/speed, size=n)
-        for i in range(min(pixel//2, 3)):
-            extra_delay = 40.0
-            gap[i] = np.random.uniform(extra_delay/(i+2), extra_delay/(i+1))
-            gap[n-1-i] = np.random.uniform(extra_delay/(i+2), extra_delay/(i+1))
-        return gap
-    gap_x = gen_gap(pixel_x, 8.0)
-    gap_y = gen_gap(pixel_y, 6.0)
-    gap_x = list(gap_x)[::-1]
-    gap_y = list(gap_y)[::-1]
-    gaps_pixel = []
-    while gap_x or gap_y:
-        if np.random.randint(len(gap_x)+len(gap_y)) < len(gap_x):
-            gaps_pixel.append([1, 0, gap_x.pop()])
-        else:
-            gaps_pixel.append([0, 1, gap_y.pop()])
-    n = len(gaps_pixel)
-    i = 0
-    _b = 1
-    gaps = []
-    while i<n:
-        if i<10:
-            b = 1
-        elif i<n-10:
-            b = _b + np.random.randint(0, 2)
-            b = min(b, 6)
-            if b==6 and np.random.uniform()<0.1:
-                b -= 1
-        else:
-            b = 1
-        _b = b
-        dx, dy, delay = 0, 0, 0.
-        for j in range(i,i+b):
-            if gaps_pixel[j][0]:
-                dx += 1 if pixel_x>0 else -1
-            if gaps_pixel[j][1]:
-                dy += 1 if pixel_y>0 else -1
-            delay += gaps_pixel[j][2]
-        gaps.append([dx, dy, delay])
-        i += b
-    for dx, dy, delay in gaps:
-        mouse.move(dx, dy)
-        time.sleep(delay/1e3)
-    return
+    def __init__(self, data):
+        super().__init__(data)
+        self.eye = np.array(list(data['eye'].values()))
+        self.eye_blockpos = np.floor(self.eye).astype(int)
+        self.placed_pos = []
 
-def intersects(player_pos, direction, block, padding=0.):  # GPT4
-    # Extract block coordinates
-    bx, by, bz = block
-
-    # Define the bounds of the block
-    min_bound = (bx-padding, by-padding, bz-padding)
-    max_bound = (bx+1+padding, by+1+padding, bz+1+padding)
-
-    # Initialize parameters
-    eps = 1e-6
-    tmin, tmax = -float('inf'), float('inf')
-
-    for i in range(3):
-        if abs(direction[i])>eps:
-            t1 = (min_bound[i] - player_pos[i]) / direction[i]
-            t2 = (max_bound[i] - player_pos[i]) / direction[i]
-
-            tmin = max(tmin, min(t1, t2))
-            tmax = min(tmax, max(t1, t2))
-        elif player_pos[i]<min_bound[i] or player_pos[i]>max_bound[i]:
-            return False  # Parallel and outside the slab
-
-    return tmax >= tmin and tmax > 0
-
-def manh_dist(pos1, pos2):
-    return np.sum(np.abs(pos1-pos2))
-
-class BlockIn:
-
-    def __init__(self, position, eye, direction, blocks):
-        self.position = np.array(position, dtype=np.int64)
-        self.direction = get_dir_vec3(*direction)
-        self._blocks = np.array(blocks)
-        self.blocks = self._blocks.copy()
-        self.eye = np.array(eye)
-        self.eye_blockpos = self.eye.astype(np.int64)
+    def set_info(self, info):
+        # Basically only check whether cancelled
+        self.info_log.append(info)
 
     def work(self):
+        self.start_t = time.time()
         que = []
-        for dy in [-1, 0, 1, 2]:
+        for dy in [-1, 0, 1]:
             for dx, dz in [(0,1), (1,0), (0,-1), (-1,0)]:
-                x = self.position[0] + dx
-                y = self.position[1] + dy
-                z = self.position[2] + dz
+                x = self.player_pos[0] + dx
+                y = self.player_pos[1] + dy
+                z = self.player_pos[2] + dz
                 que.append(np.array([x, y, z]))
-        x, y, z = self.position
-        y += 2
-        que.append(np.array([x, y, z]))
+        x, y, z = self.player_pos
+        que.append(np.array([x-1, y+2, z]))
+        que.append(np.array([x+1, y+2, z]))
+        que.append(np.array([x, y+2, z]))
         for pos in que:
-            if get_block(self.blocks, self.position, pos)!='Air':
+            if not self.last_info():
+                return
+            if self.get_block(pos)!='Air':
                 continue
             direction = self.get_place_direction(pos)
             if direction is not None:
                 print("place block on", *pos)
-                rotate_to(self.direction, direction)
-                time.sleep(1e-3)
+                self.placed_pos.append(pos)
+                rotate_fast(direction, self.direction, duration=0.03)
                 self.direction = direction
-                mouse.press(Button.right)
-                time.sleep(2e-2)
-                mouse.release(Button.right)
-                time.sleep(1e-3)
-                set_block(self.blocks, self.position, pos, 'Wool')
+                time.sleep(0.05)
+                ri.rightClick(0.05)
+                time.sleep(0.05)
+                #time.sleep(1)
+                self.set_block(pos, 'Wool')
             else:
                 print("can't place on", *pos)
 
@@ -557,34 +661,35 @@ class BlockIn:
         #breakpoint()
         for i in range(3):
             for j in [-1, 1]:
-                base = pos.copy()
+                base = pos.copy()  # base is the position of block to be clicked
                 base[i] += j
-                if get_block(self.blocks, self.position, base)=='Air':
+                if self.get_block(base)=='Air':
                     continue
-                if manh_dist(self.eye_blockpos, base)<manh_dist(self.eye_blockpos, pos):
+                if manh_dist(self.eye_blockpos, base) < manh_dist(self.eye_blockpos, pos):
                     continue
                 for _ in range(30):
                     if _:
-                        target = base.copy().astype(np.float64)
+                        target = base.astype(float)
                         target[i] = max(base[i], pos[i])
                         for k in range(3):
                             if i==k: continue
-                            target[k] += np.random.uniform(0.25, 0.75)
+                            target[k] += np.random.uniform(0.2, 0.8)
                         direction = target - self.eye
                         direction /= np.linalg.norm(direction)
                     else:
+                        # If the direction is already satisfied
                         if not intersects(self.eye, self.direction, base, padding=-0.01):
                             continue
-                        direction = self.direction
+                        direction = self.direction.copy()
                     dist = manh_dist(self.eye_blockpos, base)
                     ex, ey, ez = self.eye_blockpos
                     ok = True
                     for x in range(ex-dist+1, ex+dist):
                         for y in range(ey-dist+abs(x-ex)+1, ey+dist-abs(x-ex)):
                             for z in range(ez-dist+abs(x-ex)+abs(y-ey)+1, ez+dist-abs(x-ex)-abs(y-ey)):
-                                if get_block(self.blocks, self.position, np.array([x, y, z]))=='Air':
+                                if self.get_block([x, y, z])=='Air':
                                     continue
-                                if intersects(self.eye, direction, np.array([x, y, z]), padding=0.05):
+                                if intersects(self.eye, direction, np.array([x, y, z]), padding=0.01):
                                     ok = False
                                     break
                             if not ok: break
@@ -593,133 +698,79 @@ class BlockIn:
                         return direction
         return None
 
+def handle_skill(data):
+    # Handle request (only skills) in background
+    shared.cancelled = False
 
-# Network
+    tp = data['type']
 
-logging.basicConfig(filename='server.log', level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
+    if tp=='sort':
+        sort_items(data['hotbar'])
 
-sensitivity_log = []
-timestamp = []
+    elif tp=='test':
+        test(data)
 
-class HTTPHandler(BaseHTTPRequestHandler):
+    elif tp=='record':
+        record()
 
-    def log_message(self, format, *args):
-        # Override log_message to log to the file
-        logging.info("%s - - [%s] %s\n" %
-                (self.client_address[0],
-                    self.log_date_time_string(),
-                    format % args))
+    elif tp=='blockin':
+        blockin = BlockIn(data)
+        blockin.work()
 
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+    elif tp.startswith('ninja'):
+        ninja = NinjaBridge(data)
+        ninja.ninja_bridge(tp)
+        ninja.analyze()
 
-        # Send message back to client
-        message = "Hello, world! This is a response from the server."
-        # Write content as utf-8 data
-        self.wfile.write(bytes(message, "utf8"))
+    elif tp=='tellybridge':
+        telly = TellyBridge(data)
+        telly.telly_bridge()
 
+    elif tp=='godbridge':
+        god = GodBridge(data)
+        god.god_bridge()
 
-    def do_POST(self):
-        #t_s = time.time()
-        content_length = int(self.headers['Content-Length'])
-        # Read the data
-        post_data = self.rfile.read(content_length)
+    elif tp=='playerlist':
+        #print(data['names'])
+        shared.players_que.put(data['names'])
 
-        # Try to parse JSON data
-        try:
-            data = json.loads(post_data.decode())
-            if True:
-                with open("received_data.json", "w") as file:
-                    json.dump(data, file, indent=4)
-            response = "JSON data received and saved."
-        except json.JSONDecodeError:
-            response = "Failed to decode JSON data."
+    #print(data['type'])
+    return
 
-        # Send response
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(response.encode())
+def update_skill(data):
+    tp = data['type']
+    if tp.startswith('ninja'):
+        with Lock():
+            if tp=='ninjabridge':
+                NinjaBridge.left_forward = 10000
+            elif tp=='ninja_inc2':
+                NinjaBridge.step_forward = 2
+                NinjaBridge.left_forward = 1
+                NinjaBridge.left_upward = 10000
+            elif tp=='ninja_inc3':
+                NinjaBridge.step_forward = 3
+                NinjaBridge.left_forward = 1
+                NinjaBridge.left_upward = 10000
+            else:
+                print(tp)
+    elif tp=='playerlist':
+        shared.players_que.put(data['names'])
 
-        # Handle to winterbridge
-        thread = None
-        if type(data)==dict and 'type' in data.keys():
+def main():
 
-            if data['type']=='info':
-                #print("Info")
-                with threading.Lock():
-                    global latest_info
-                    latest_info = data
+    Thread(target=receive_packets).start()
+    Thread(target=stats_parser.update_stats).start()
 
-            if data['type']=='sort':
-                thread = Thread(target=sort_items, args=(data['hotbar'],))
+    while True:
+        data = shared.pack_que.get()
+        tp = data['type']
 
-            if data['type']=='test':
-                #print('Direction:', data['dir'])
-                #print('Position:', data['pos'])
-                #print('Eye:', data['eye'])
-                #print('Block:', data['blocks'])
-                thread = Thread(target=test, args=(
-                    #(data['pos']['x'], data['pos']['y'], data['pos']['z']),
-                    #(data['eye']['x'], data['eye']['y'], data['eye']['z']),
-                    #(data['dir']['x'], data['dir']['y']),
-                    list(data['pos'].values()),
-                    list(data['eye'].values()),
-                    list(data['dir'].values()),
-                    data['blocks'],
-                    ))
-                sensitivity_log.append(data['dir'])
-                if False and len(sensitivity_log)==2:
-                    window = get_window_info()
-                    # data['pos']['x'] is the pitch. Looking up: -90, looking down: 90
-                    print('Sensitivity pitch:', (sensitivity_log[1]['x']-sensitivity_log[0]['x'])/(window.HEIGHT//4))
-                    print('Sensitivity yaw:', (sensitivity_log[1]['y']-sensitivity_log[0]['y'])/(window.WIDTH//4))
+        if tp=='info':
+            print("You should break")
 
-
-            if data['type']=='blockin':
-                thread = Thread(target=block_in, args=(
-                    list(data['pos'].values()),
-                    list(data['eye'].values()),
-                    list(data['dir'].values()),
-                    data['blocks'],
-                    ))
-
-            if data['type']=='ninja':
-                thread = Thread(target=ninja_bridge, args=(
-                    list(data['pos'].values()),
-                    list(data['eye'].values()),
-                    list(data['dir'].values()),
-                    data['blocks'],
-                    ))
-
-            if data['type']=='inc3':
-                thread = Thread(target=inc3_bridge, args=(
-                    list(data['pos'].values()),
-                    list(data['eye'].values()),
-                    list(data['dir'].values()),
-                    data['blocks'],
-                    ))
-
-            if data['type']=='cancel':
-                with threading.Lock():
-                    global cancel_t
-                    cancel_t = time.time()
+        elif tp=='cancel':
+            print("Break")
 
         else:
-            # Test
-            #print(data)
-            #timestamp.append(time.time())
-            if False and len(timestamp)==1000:
-                print("Sec:", timestamp[-1]-timestamp[0])
-                exit()
-
-        if thread:
-            thread.start()
-        #t_t = time.time()
-        #print("This post costs:", t_t-t_s)
-
-
-httpd = HTTPServer(('', config.network.port), HTTPHandler)
-httpd.serve_forever()
+            handle_skill(data)
 

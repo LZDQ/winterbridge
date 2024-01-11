@@ -1,4 +1,4 @@
-package net.lzdq.winterbridge.client.handler.httpclass;
+package net.lzdq.winterbridge.client.handler.skills;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Inventory;

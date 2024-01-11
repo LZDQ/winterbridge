@@ -13,12 +13,17 @@ public class ClientModHandler {
     public static void registerKeys(RegisterKeyMappingsEvent event){
         event.register(ModKeyBindings.INSTANCE.KEY_SORT);
         event.register(ModKeyBindings.INSTANCE.KEY_TEST);
+        event.register(ModKeyBindings.INSTANCE.KEY_RECORD);
         event.register(ModKeyBindings.INSTANCE.KEY_CANCEL);
         event.register(ModKeyBindings.INSTANCE.KEY_BLOCKIN);
+        event.register(ModKeyBindings.INSTANCE.KEY_PLAYERS);
         event.register(ModKeyBindings.INSTANCE.KEY_NINJA);
         event.register(ModKeyBindings.INSTANCE.KEY_INC3);
+        event.register(ModKeyBindings.INSTANCE.KEY_INC2);
         event.register(ModKeyBindings.INSTANCE.KEY_DIAGONAL);
         event.register(ModKeyBindings.INSTANCE.KEY_DIAGINC);
+        event.register(ModKeyBindings.INSTANCE.KEY_TELLY);
+        event.register(ModKeyBindings.INSTANCE.KEY_GOD);
     }
 
 }

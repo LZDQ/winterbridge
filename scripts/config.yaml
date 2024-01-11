@@ -11,10 +11,13 @@ keymappings:
     - "9"
   inventory: f
   drop: g
-  sneak: shiftleft
+  sneak: shift
 
 sort_hotbar:
-  Sword: 0
+  Diamond Sword: 0
+  Iron Sword: 0
+  Stone Sword: 0
+  Wooden Sword: 0
   Pickaxe: 1
   Shears: 2
   Axe: 3
@@ -29,14 +32,23 @@ network:
   port: 1234
 
 mouse:
-  sensitivity_pitch: 0.15230980972222222
-  sensitivity_yaw: 0.152310937499999  # same
+  sensitivity_pitch: 0.15
+  sensitivity_yaw: 0.15
 
-bridge:  # From facing positive X, right positive Z to this
+ninjabridge:  # From facing positive X, right positive Z to this
   direction:
-    - -0.14338381222819403873  #-0.14412781951843978
-    - -0.9792252880628748
-    - -0.14338381222819403873  #-0.14263592415320925
+    - -0.183021702095792971
+    - -0.9659224156856066
+    - -0.183021702095792971
+  position:  # away from the center of the original block
+    - 0.79531914661104
+    - 0.2819803207912
+
+godbridge:  # From facing positive X, right positive Z to this
+  direction:
+    - -0.166875561273452635920
+    - -0.9717536180016725
+    - -0.166875561273452635920
   position:  # away from the center of the original block
     - 0.79531914661104
     - 0.2819803207912

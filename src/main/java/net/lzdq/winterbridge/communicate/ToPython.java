@@ -1,16 +1,52 @@
-package net.lzdq.winterbridge.network;
+package net.lzdq.winterbridge.communicate;
 
 import com.google.gson.Gson;
-import net.lzdq.winterbridge.BridgeMod;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class ToPython {
-    public static void send(Object req){
-        Gson gson = new Gson();
+
+    static FileWriter fp;
+    static BufferedWriter buffer;
+    static int fail_count = 0;
+    private static void getpipe(){
+        String pipe_path = "/home/ldq/mc/winterbridge/scripts/pipe";
+        try {
+            fp = new FileWriter(pipe_path);
+            buffer = new BufferedWriter(fp);
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+        }
+
+    }
+    static{
+        getpipe();
+    }
+
+    static Gson gson = new Gson();
+    public static boolean send(Object req){
+        String jsonContent = gson.toJson(req);
+        try {
+            buffer.write(jsonContent + "\n");
+            buffer.flush();
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+            getpipe();
+            fail_count++;
+            Minecraft.getInstance().player.displayClientMessage(Component.literal("IOException" + fail_count), true);
+            return false;
+        }
+        return true;
+    }
+    public static String send_http(Object req){
         String jsonContent = gson.toJson(req);
         //BridgeMod.LOGGER.info(jsonContent);
 
@@ -33,10 +69,12 @@ public class ToPython {
             //System.out.println("Response body: " + response.body());
             //BridgeMod.LOGGER.info(String.format("%d", response.statusCode()));
             //BridgeMod.LOGGER.info(response.body());
+            return response.body();
 
         } catch (Exception e) {
             //BridgeMod.LOGGER.info("Exception");
             //e.printStackTrace();
         }
+        return "Failed";
     }
 }

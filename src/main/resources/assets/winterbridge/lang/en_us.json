@@ -2,10 +2,15 @@
   "key.categories.winterbridge": "WinterBridge",
   "key.winterbridge.key_sort": "Sort hotbar",
   "key.winterbridge.key_test": "Test",
+  "key.winterbridge.key_record": "Record",
   "key.winterbridge.key_cancel": "Cancel",
   "key.winterbridge.key_blockin": "Block In",
-  "key.winterbridge.key_ninja": "Ninja Bridge",
-  "key.winterbridge.key_inc3": "Increase 3x1 for 5 times",
+  "key.winterbridge.key_players": "Get Player Names",
+  "key.winterbridge.key_ninjabridge": "Ninja Bridge",
+  "key.winterbridge.key_ninja_inc3": "Ninja Bridge. Increase 3x1 for 5 times",
+  "key.winterbridge.key_ninja_inc2": "Ninja Bridge. Increase 2x1 for inf times",
   "key.winterbridge.key_diagonal": "Diagonal Bridge",
-  "key.winterbridge.key_diaginc": "Diagonal Increase Bridge"
+  "key.winterbridge.key_diaginc": "Diagonal Increase Bridge",
+  "key.winterbridge.key_tellybridge": "Telly Bridge",
+  "key.winterbridge.key_godbridge": "God Bridge"
 }
