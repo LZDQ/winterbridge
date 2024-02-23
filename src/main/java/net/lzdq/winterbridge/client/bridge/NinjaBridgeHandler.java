@@ -1,6 +1,8 @@
 package net.lzdq.winterbridge.client.bridge;
 
 import net.lzdq.winterbridge.ModConfig;
+import net.lzdq.winterbridge.WinterBridge;
+import net.lzdq.winterbridge.client.CheatMode;
 import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
 import net.lzdq.winterbridge.client.action.RotateHandler;
 import net.minecraft.client.KeyMapping;
@@ -8,14 +10,17 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
 
+import static net.lzdq.winterbridge.client.CheatMode.getNinjaWaitTick;
+
 
 public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
-    int left_tick;
     public NinjaBridgeHandler(String method){
         super();
         update(method);
-        RotateHandler.init(new Vec2(ModConfig.ninja_yaw.get().floatValue(), dir_go.toYRot() - 135), 10);
-        left_tick = ModConfig.ninja_wait_tick.get();
+        RotateHandler.init(new Vec2(
+                (float) (ModConfig.ninja_yaw.get().floatValue() + CheatMode.getYawVar()),
+                (float) (dir_go.toYRot() - 135 + CheatMode.getPitchVar())), 10);
+        left_tick = 2;
     }
     @Override
     public void update(String method){
@@ -61,7 +66,7 @@ public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
         if (!mc.player.getOnPos().equals(base_pos)){
             if (mc.hitResult.getType() == HitResult.Type.BLOCK){
                 BlockHitResult hit = (BlockHitResult) mc.hitResult;
-                if (hit.getDirection().equals(dir_go)){
+                if (hit.getDirection().equals(dir_go) && --left_tick < 0){
                     PlaceBlockHandler.placeBlock(hit);
                 } else if (!mc.player.getBlockStateOn().isAir()){
                     base_pos = base_pos.relative(dir_go);

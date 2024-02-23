@@ -13,8 +13,6 @@ public class ClientModHandler {
     @SubscribeEvent
     public static void registerKeys(RegisterKeyMappingsEvent event){
         event.register(ModKeyBindings.INSTANCE.KEY_SORT);
-        //event.register(ModKeyBindings.INSTANCE.KEY_TEST);
-        //event.register(ModKeyBindings.INSTANCE.KEY_RECORD);
         event.register(ModKeyBindings.INSTANCE.KEY_CANCEL);
         //event.register(ModKeyBindings.INSTANCE.KEY_BLOCKIN);
         //event.register(ModKeyBindings.INSTANCE.KEY_PLAYERS);
@@ -22,13 +20,14 @@ public class ClientModHandler {
         event.register(ModKeyBindings.INSTANCE.KEY_NINJA_INC);
         event.register(ModKeyBindings.INSTANCE.KEY_NINJA_DIAG);
         event.register(ModKeyBindings.INSTANCE.KEY_NINJA_DIAG_INC);
-        //event.register(ModKeyBindings.INSTANCE.KEY_TELLY);
+        event.register(ModKeyBindings.INSTANCE.KEY_CHEAT_MODE);
         event.register(ModKeyBindings.INSTANCE.KEY_GOD);
+        event.register(ModKeyBindings.INSTANCE.KEY_UTIL);
     }
 
     @SubscribeEvent
     public static void onCommonSetup(FMLCommonSetupEvent event) {
-        PacketHandler.register();
+        //PacketHandler.register();
     }
 
 }

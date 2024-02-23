@@ -8,8 +8,12 @@ import net.lzdq.winterbridge.client.clutch.AbstractClutchHandler;
 import net.lzdq.winterbridge.client.clutch.BlockClutchHandler;
 import net.lzdq.winterbridge.client.action.RotateHandler;
 import net.lzdq.winterbridge.packet.PacketInspector;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -49,9 +53,12 @@ public class ClientForgeHandler {
                 spam_right_mode = 0;
                 bridgeHandler = null;
                 clutchHandler = null;
+                CheatMode.changeCheatMode(ModConfig.cheat_mode.get());
+                /*
                 ChannelPipeline pipeline = mc.getConnection().getConnection().channel().pipeline();
                 pipeline.addBefore("packet_handler", "my_packet_handler", new PacketInspector());
                 WinterBridge.LOGGER.info(pipeline.names().toString());
+                 */
             }
         }
 
@@ -76,12 +83,27 @@ public class ClientForgeHandler {
         if (ModKeyBindings.INSTANCE.KEY_SORT.consumeClick())
             is_sorting = true;
 
-        //handleSpamClick();
+        handleSpamClickRight();
 
         if (ModKeyBindings.INSTANCE.KEY_CANCEL.consumeClick())
             cancelled = true;
 
-        if (mc.player.getMainHandItem().getItem() instanceof BlockItem &&
+        if (ModKeyBindings.INSTANCE.KEY_CHEAT_MODE.consumeClick())
+            CheatMode.changeCheatMode();
+
+        if (ModKeyBindings.INSTANCE.KEY_UTIL.consumeClick()){
+            // Use fireball
+            Inventory inv = mc.player.getInventory();
+            for (int i = 0; i < 9; i++)
+                if (inv.getItem(i).getItem() == Items.FIRE_CHARGE){
+                    inv.selected = i;
+                    KeyMapping.click(mc.options.keyUse.getKey());
+                    break;
+                }
+        }
+
+        if (CheatMode.cheat_mode < 2 &&
+                mc.player.getMainHandItem().getItem() instanceof BlockItem &&
                 mc.player.getBlockStateOn().isAir() &&
                 mc.options.keyAttack.consumeClick()){
             // Holding block and clicking in the air, activate block clutch
@@ -97,24 +119,25 @@ public class ClientForgeHandler {
 
         if (bridgeHandler != null) {
             bridgeHandler.tick();
-            if (cancelled) {
-                if (bridgeHandler.setCancelled())
-                    bridgeHandler = null;
-            }
+            if (cancelled)
+                bridgeHandler.setCancelled("manual");
+            if (bridgeHandler.isFinished())
+                bridgeHandler = null;
         }
 
         if (clutchHandler != null){
-            if (clutchHandler.finished())
+            if (clutchHandler.isFinished())
                 clutchHandler = null;
             else clutchHandler.tick();
         }
+
         RotateHandler.tick();
     }
     @SubscribeEvent
-    public void onRenderTick(TickEvent.RenderTickEvent event){
+    public static void onRenderTick(TickEvent.RenderTickEvent event){
         if (event.phase == TickEvent.Phase.END)
             return ;
-        handleSpamClick();
+        handleSpamClickLeft();
     }
     private static boolean doSwap(int slot, int dest){
         double interval = 0.5;
@@ -215,6 +238,8 @@ public class ClientForgeHandler {
         }
         if (doSwap(slot, ModConfig.slot_axe.get())) return ;
 
+        mc.player.closeContainer();
+
         is_sorting = false;
     }
     private static void swapSlot(int slot_from, int slot_to){
@@ -232,11 +257,17 @@ public class ClientForgeHandler {
                 mc.player
         );
     }
-    private static void handleSpamClick(){
-        if (mc.options.keyHotbarSlots[ModConfig.slot_sword.get()].isDown()){
+    private static void handleSpamClickLeft() {
+        if (System.currentTimeMillis() < until)
+            return;
+        if (mc.options.keyHotbarSlots[ModConfig.slot_sword.get()].isDown()) {
             // Spam-click when holding switching to sword
             KeyMapping.click(mc.options.keyAttack.getKey());
+            until = (long) (System.currentTimeMillis() + Math.random() * 20 + 30);
         }
+    }
+    private static void handleSpamClickRight(){
+        // Every client tick
         if (mc.options.keyHotbarSlots[ModConfig.slot_block.get()].isDown()){
             if (spam_right_mode == 0){
                 if (mc.player.getInventory().selected == ModConfig.slot_block.get()){
@@ -252,6 +283,11 @@ public class ClientForgeHandler {
         } else spam_right_mode = 0;
     }
     private static void startBridge(String method){
+        mc.player.displayClientMessage(
+                Component.literal("Start bridge: " + method)
+                        .withStyle(Style.EMPTY.withColor(ModConfig.getColorStartBridge())),
+                true
+        );
         cancelled = false;
         if (bridgeHandler == null){
             if (method.startsWith("ninja") && !method.startsWith("ninja_diag"))
@@ -272,6 +308,8 @@ public class ClientForgeHandler {
             if(player == mc.player){
                 // Hit
                 // AutoCancel
+                if (bridgeHandler != null)
+                    bridgeHandler.setCancelled("hit");
             }
         }
     }
@@ -281,16 +319,6 @@ public class ClientForgeHandler {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){
         WinterBridge.LOGGER.info("Player login");
-    }
-
-    @SubscribeEvent
-    public static void onInteraction(InputEvent.InteractionKeyMappingTriggered event){
-        //WinterBridge.LOGGER.info("interaction triggered");
-    }
-
-    @SubscribeEvent
-    public static void onMouseButton(InputEvent.MouseButton event){
-        //WinterBridge.LOGGER.info("Mouse Input: button {} action {}", event.getButton(), event.getAction());
     }
 }
 

@@ -1,24 +1,26 @@
 package net.lzdq.winterbridge.client.bridge;
 
 import net.lzdq.winterbridge.ModConfig;
+import net.lzdq.winterbridge.client.CheatMode;
 import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
 import net.lzdq.winterbridge.client.action.RotateHandler;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
 
 
 public class NinjaDiagonalHandler extends DiagonalBridgeHandler{
-    int left_tick;
+    Direction last_hit_dir = null;
     public NinjaDiagonalHandler(String method){
         super();
         update(method);
         RotateHandler.init(new Vec2(
-                        ModConfig.ninja_diag_yaw.get().floatValue(),
-                        dir_go_d.toYRot() - 135.1F),
+                        (float) (ModConfig.ninja_diag_yaw.get() + CheatMode.getYawVar()),
+                        (float) (dir_go_d.toYRot() - 135 + 0.5 + Math.abs(CheatMode.getPitchVar()))),
                 10);
-        left_tick = ModConfig.ninja_diag_wait_tick.get();
+        left_tick = 2;
     }
     @Override
     public void update(String method){
@@ -48,7 +50,7 @@ public class NinjaDiagonalHandler extends DiagonalBridgeHandler{
         //if (mc.player.getDeltaMovement().lengthSqr() > ModConfig.ninja_diag_thresh.get()) flag = false;
          */
         if (mc.player.position().distanceToSqr(mc.player.xOld, mc.player.yOld, mc.player.zOld)
-                > ModConfig.ninja_diag_thresh.get())
+                > 1e-5)
             flag = false;
         if (flag && --left_tick < 0)
             current_task = "sneak";
@@ -65,9 +67,15 @@ public class NinjaDiagonalHandler extends DiagonalBridgeHandler{
         if (mc.player.getOnPos() != base_pos){
             if (mc.hitResult.getType() == HitResult.Type.BLOCK){
                 BlockHitResult hit = (BlockHitResult) mc.hitResult;
-                if (hit.getDirection() == dir_go_a || hit.getDirection() == dir_go_d){
+                if (hit.getDirection() != Direction.UP &&
+                        (hit.getDirection() != last_hit_dir ||
+                                mc.player.position().distanceToSqr(mc.player.xOld, mc.player.yOld, mc.player.zOld)
+                                        < 1e-5)){
                     //KeyMapping.click(mc.options.keyUse.getKey());
-                    PlaceBlockHandler.placeBlock(hit);
+                    if (--left_tick < 0) {
+                        PlaceBlockHandler.placeBlock(hit);
+                        last_hit_dir = hit.getDirection();
+                    }
                     //KeyMapping.click(mc.options.keyUse.getKey());
                 } else if (!mc.player.getBlockStateOn().isAir()){
                     base_pos = base_pos.relative(dir_go_a).relative(dir_go_d);

@@ -1,6 +1,8 @@
 package net.lzdq.winterbridge.client.bridge;
 
+import net.lzdq.winterbridge.ModConfig;
 import net.lzdq.winterbridge.WinterBridge;
+import net.lzdq.winterbridge.client.CheatMode;
 import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.BlockPos;
@@ -14,8 +16,7 @@ public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{
     // Template for Diagonal bridge
     Direction dir_go_a, dir_go_d; // Direction of pressing a and d
     Vec3i vec_go;
-    BlockPos base_pos;
-    int walk_forward, left_forward, left_up, last_y;
+    int walk_forward, left_forward, left_up, last_y, left_tick;
     public DiagonalBridgeHandler(){
         super();
         float pitch = mc.player.getYRot();
@@ -41,6 +42,7 @@ public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{
         return mc.player.position().subtract(center).dot(Vec3.atLowerCornerOf(vec_go));
     }
     void updateNextWalk(){
+        left_tick = CheatMode.getNinjaWaitTick();
         last_y = base_pos.getY();
         if(left_up > 0 && --left_forward == 0){
             left_up--;
@@ -55,6 +57,8 @@ public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{
         if (base_pos.getY() == last_y) {
             //WinterBridge.LOGGER.info("BlockY {}", mc.player.getBlockY());
             mc.options.keyJump.setDown(mc.player.getOnPos().getY() == last_y);
+            if (CheatMode.cheat_mode == 2)  // Sneak in Slightly mode
+                mc.options.keyShift.setDown(true);
             if (mc.level.getBlockState(base_pos.above()).isAir()){
                 if (mc.player.getY() >= last_y + 1.8) {
                     /*
@@ -73,6 +77,8 @@ public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{
             } else {
                 base_pos = base_pos.above();
                 current_task = "walk";
+                if (CheatMode.cheat_mode == 2)
+                    mc.options.keyShift.setDown(false);
                 walkTick();
             }
         } else {
@@ -82,8 +88,9 @@ public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{
 
     @Override
     void cancelTick(){
-        KeyMapping.set(mc.options.keyShift.getKey(), true);
+        KeyMapping.set(mc.options.keyShift.getKey(), cancel_cause.equals("manual"));
         KeyMapping.set(mc.options.keyDown.getKey(), false);
+        KeyMapping.set(mc.options.keyJump.getKey(), false);
         current_task = "finish";
     }
 

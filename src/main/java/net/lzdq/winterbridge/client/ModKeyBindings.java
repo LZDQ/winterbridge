@@ -16,19 +16,6 @@ public final class ModKeyBindings {
             GLFW.GLFW_KEY_F4, // Default key
             CATEGORY // Mapping will be in the misc category
     );
-    public final KeyMapping KEY_TEST = new KeyMapping(
-            "key." + WinterBridge.MODID + ".key_test",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_F12,
-            CATEGORY
-    );
-
-    public final KeyMapping KEY_RECORD = new KeyMapping(
-            "key." + WinterBridge.MODID + ".key_record",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_N,
-            CATEGORY
-    );
 
     public final KeyMapping KEY_CANCEL = new KeyMapping(
             "key." + WinterBridge.MODID + ".key_cancel",
@@ -36,6 +23,7 @@ public final class ModKeyBindings {
             GLFW.GLFW_KEY_GRAVE_ACCENT,
             CATEGORY
     );
+
     public final KeyMapping KEY_BLOCKIN = new KeyMapping(
             "key." + WinterBridge.MODID + ".key_blockin",
             InputConstants.Type.KEYSYM,
@@ -49,6 +37,7 @@ public final class ModKeyBindings {
             GLFW.GLFW_KEY_B,
             CATEGORY
     );
+
     public final KeyMapping KEY_NINJA = new KeyMapping(
             "key." + WinterBridge.MODID + ".key_ninja",
             InputConstants.Type.KEYSYM,
@@ -77,10 +66,10 @@ public final class ModKeyBindings {
             CATEGORY
     );
 
-    public final KeyMapping KEY_TELLY = new KeyMapping(
-            "key." + WinterBridge.MODID + ".key_tellybridge",
+    public final KeyMapping KEY_CHEAT_MODE = new KeyMapping(
+            "key." + WinterBridge.MODID + ".key_cheatmode",
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_J,
+            GLFW.GLFW_KEY_N,
             CATEGORY
     );
 
@@ -90,4 +79,12 @@ public final class ModKeyBindings {
             GLFW.GLFW_KEY_F8,
             CATEGORY
     );
+
+    public final KeyMapping KEY_UTIL = new KeyMapping(
+            "key." + WinterBridge.MODID + ".key_util",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_BACKSPACE,
+            CATEGORY
+    );
+
 }

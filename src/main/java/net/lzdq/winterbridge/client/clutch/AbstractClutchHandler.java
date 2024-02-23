@@ -3,7 +3,6 @@ package net.lzdq.winterbridge.client.clutch;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
 
 public abstract class AbstractClutchHandler {
@@ -16,5 +15,5 @@ public abstract class AbstractClutchHandler {
         oldRot = mc.player.getRotationVector();
     }
     public abstract void tick();
-    public abstract boolean finished();
+    public abstract boolean isFinished();
 }

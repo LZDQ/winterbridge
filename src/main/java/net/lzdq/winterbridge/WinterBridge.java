@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 public class WinterBridge {
     public static final String MODID = "winterbridge";
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static final int slot_sword = 0, slot_block = 1, slot_shear = 2;
     public WinterBridge(){
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         //modEventBus.addListener(this::commonSetup);
