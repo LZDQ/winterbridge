@@ -1,6 +1,6 @@
 package net.lzdq.winterbridge.client.clutch;
 
-import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
+import net.lzdq.winterbridge.client.action.ActionHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
@@ -51,7 +51,7 @@ public class BlockClutchHandler extends AbstractClutchHandler{
     @Override
     public void tick(){
         if (isFinished()) return ;
-        if (PlaceBlockHandler.placeBlock(hit)){
+        if (ActionHandler.placeBlock(hit)){
             if (hit_forward != null){
                 hit = hit_forward;
                 hit_forward = null;

@@ -46,4 +46,7 @@ public class RotateHandler {
     public static boolean finished(){
         return t > n;
     }
+    public static void setCancelled(){
+        t = n + 1;
+    }
 }

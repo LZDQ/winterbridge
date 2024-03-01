@@ -1,15 +1,10 @@
 package net.lzdq.winterbridge.client.bridge;
 
-import net.lzdq.winterbridge.ModConfig;
 import net.lzdq.winterbridge.WinterBridge;
 import net.lzdq.winterbridge.client.CheatMode;
-import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{

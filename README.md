@@ -5,14 +5,20 @@ This is a bedwars assistant developed by LZDQ. Currently it requires Minecraft 1
 ## functions
 
 1. Ninja bridge
-2. Ninja bridge with inc
-3. Ninja diagonal bridge (with inc)
+2. Ninja bridge with increase
+3. Ninja diagonal bridge (with increase)
 4. Sort hotbar
 5. Spam-clicking (both left and right)
 6. Block clutch
 7. //God bridge (caution with this! it will get banned)
+8. Auto switching tools
+9. Quick switching to (and use) items (fireball, tnt, gapple, and so on)
+10. Quick switching to hard blocks
+11. Block-in
 
 ## Usage
+
+**If you don't want to read the long passage, wait for me to release a tutorial video**
 
 #### bridge methods
 
@@ -38,35 +44,53 @@ Please do not use godbridge cause I can't reproduce it legitmately. My godbridge
 
 #### spam clicking
 
-For swords, I strongly suggest binding your hotbar switch button of `1` to your mouse side button (Button 4). When holding down your side button, you start spam clicking your left mouse button every random 30~50 ms. So you can instantly switch to your sword and spam-click.
+For swords, I strongly suggest binding your hotbar switch button of `1` to your mouse side button (Button 4). When holding down your side button, you start spam clicking your left mouse button every random 30~50 ms. So you can instantly switch to your sword and spam-click. You can't change this behavior.
 
-For blocks, I strongly suggest binding your hotbar switch button of your block slot to your mouse side button (Button 5). The logic of spam right clicking is as follows:
+For blocks, I slightly suggest binding your hotbar switch button of your block slot to your mouse side button (Button 5). This mod has a key of switching to blocks and start spam right clicking. The logic of spam right clicking is as follows:
 
-* When you actually switch from another slot to your block slot, do nothing until you release the button.
-* When you are holding down your block slot switching button but you are already holding that slot, start spam right clicking every client tick (50ms).
+* When you are not selecting block, switch to the slot with most blocks and do nothing until you release.
+* When you are holding down your block switching button and you are already selecting a block slot, start spam right clicking every client tick (50ms).
 
 ------------
 
 #### sort
 
-Pressing `F4` automatically sorts your hotbar slots. By default, it will place the best sword at slot 1, pickaxe at slot 2, shears at slot 3, axe at slot 4, and blocks with the msot count at slot 5. This function swap two items every 0.5s. It doesn't open up your inventory, and you can move around when sorting if the server is not checking this subtle hack.
+Pressing `F4` automatically sorts your hotbar slots. By default, it will place the best sword at slot 1, pickaxe at slot 2, shears at slot 3, axe at slot 4, and blocks with the most count at slot 5. This function swap two items every ~0.5s, you can configure the time interval. It doesn't open up your inventory, and you can move around when sorting if the server is not checking this subtle hack.
 
-You can change the slots config in the mod's config file, but the items to sort are fixed.
+You can change the slots config in the mod's config file, but the items to sort are fixed. The list of them is: `sword`, `pickaxe`, `shears`, `axe`, `blocks`, `golden apple`, `fireball`, `ladder`, `bridge egg`, `pop-up tower`. No milk or potion because you always have plenty of time to prepare if you buy them.
+
+In the configure file, change the `slot_*` to whatever slot you want. `-1` means you don't want to sort it, and `[0,8]` means slot from 1 to 9.
 
 -----------------
 
 #### block clutch
 
-When holding block, not on the ground, and clicking left button, the mod will try to block clutch. First, it will try to place a block under you. If success, second it will try to place a block based on the first block in the direction of you. So normally when side clutching on a bridge, it will prevent you from falling. However, be caution to use this because it is sending packets of placing blocks instead of rotating and clicking. It won't get banned on BlocksMC for now.
+When holding block, not on the ground, and clicking left button, the mod will try to block clutch. First, it will try to place a block under you. If success, second it will try to place a block based on the first block in the direction of you. So normally when side clutching on a bridge, it will prevent you from falling. However, be caution to use this because it is sending packets of placing blocks instead of rotating and clicking. It won't get banned on BlocksMC for now, but I think it gets banned on Jartex.
+
+-----
+
+#### auto selecting hardest block
+
+Press a key to select the hardest block. Saves a lot time for block-in, cause when you are digging downwards, you will want to use the hardest block (which you gathered from their bed defense) to block other players. This also saves some time when doing your bed defense. Default order: `Obsidian` -> `End Stone` -> `Wood` -> `Clay` -> `Wool`.
+
+-----
+
+#### block-in
+
+Press a key to cover your nearby area. See video tutorial for more.
+
+-----
+
+#### auto login / auto who
+
+Tired of typing your password again and again? Now configure your password in this mod and press a key to login! Another key is for auto /who.
 
 ## Other features
 
-* Selecting cheat mode. There are 3 different modes: absolute, relative, slightly (0, 1, 2). absolute means there is no anti anti-cheat. slightly means there is only slightly cheats. The key differences between these modes are precision and bridging speed. Using absolute mode 99% makes other players spot you hacking, while using slightly is even a little slower than myself bridging. By default, absolute, relative, slightly mode wait for 0, 1, 2 ticks after each step. Also, block clutching is disabled in slightly mode. Press `n` to cycle these mode. You can also change the config of default cheat mode.
-* Custom config in `.minecraft/config/winterbridge-config.toml`. You can change slot to place sword, pickaxe, shears, axe, and blocks, default cheat mode, color of bridging prompts, and so on.
+* Selecting cheat mode. There are 3 different modes: absolute, relative, slightly (0, 1, 2). The names are just to make sure they are all 8-letter long and look better, like username and password. absolute means there is no anti anti-cheat. slightly means there is only slightly cheats. The key differences between these modes are precision and bridging speed. Using absolute mode 99% makes other players spot you hacking, while using slightly is even a lot slower than myself bridging. By default, absolute, relative, slightly mode wait for 0, 1, 2 ticks after each step. Also, some behaviors like block clutching are disabled in slightly mode. Press `n` to cycle these mode. You can also change the config of default cheat mode.
+* Custom config in `.minecraft/config/winterbridge-config.toml`. You can change slot to place items, default cheat mode, color of bridging prompts, and so on.
 * Auto cancelling bridging. When hitted or fell, automatically cancel bridging.
 
 ## Future work
 
-I would add Block-In and ladder clutch in the future. I also considered other functions such as location players, anti-invis, but these would spoil game experience. The purpose of this mod is to reduce accident rate of bridging, not to win by hacking.
-
-Maybe release a video of how to use this.
+I also considered other functions such as locating players, anti-invis, but these would spoil game experience. The purpose of this mod is to reduce accident rate of bridging, not to win by hacking.

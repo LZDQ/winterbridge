@@ -2,9 +2,8 @@ package net.lzdq.winterbridge.client.bridge;
 
 import net.lzdq.winterbridge.ModConfig;
 import net.lzdq.winterbridge.client.CheatMode;
-import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
+import net.lzdq.winterbridge.client.action.ActionHandler;
 import net.lzdq.winterbridge.client.action.RotateHandler;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -73,7 +72,7 @@ public class NinjaDiagonalHandler extends DiagonalBridgeHandler{
                                         < 1e-5)){
                     //KeyMapping.click(mc.options.keyUse.getKey());
                     if (--left_tick < 0) {
-                        PlaceBlockHandler.placeBlock(hit);
+                        ActionHandler.placeBlock(hit);
                         last_hit_dir = hit.getDirection();
                     }
                     //KeyMapping.click(mc.options.keyUse.getKey());
@@ -81,6 +80,9 @@ public class NinjaDiagonalHandler extends DiagonalBridgeHandler{
                     base_pos = base_pos.relative(dir_go_a).relative(dir_go_d);
                     mc.options.keyShift.setDown(false);
                     updateNextWalk();
+                    if (!mc.level.getBlockState(base_pos.relative(dir_go_a).relative(dir_go_d)).isAir()){
+                        setCancelled("reached");
+                    }
                 }
             }
         }

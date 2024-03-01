@@ -1,7 +1,7 @@
 package net.lzdq.winterbridge.client.bridge;
 
 import net.lzdq.winterbridge.ModConfig;
-import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
+import net.lzdq.winterbridge.client.action.ActionHandler;
 import net.lzdq.winterbridge.client.action.RotateHandler;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.Direction;
@@ -49,7 +49,7 @@ public class GodBridgeHandler extends OrthogonalBridgeHandler{
                         loc = loc.add(0, 0.499, 0);
                         hit = new BlockHitResult(loc, dir_go, base_pos, false);
                     }
-                    PlaceBlockHandler.placeBlock(hit);
+                    ActionHandler.placeBlock(hit);
                 }
             } else {
                 base_pos = base_pos.relative(dir_go);

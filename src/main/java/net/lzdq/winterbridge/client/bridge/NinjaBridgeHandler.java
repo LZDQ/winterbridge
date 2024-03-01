@@ -1,16 +1,12 @@
 package net.lzdq.winterbridge.client.bridge;
 
 import net.lzdq.winterbridge.ModConfig;
-import net.lzdq.winterbridge.WinterBridge;
 import net.lzdq.winterbridge.client.CheatMode;
-import net.lzdq.winterbridge.client.action.PlaceBlockHandler;
+import net.lzdq.winterbridge.client.action.ActionHandler;
 import net.lzdq.winterbridge.client.action.RotateHandler;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
-
-import static net.lzdq.winterbridge.client.CheatMode.getNinjaWaitTick;
 
 
 public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
@@ -67,11 +63,14 @@ public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
             if (mc.hitResult.getType() == HitResult.Type.BLOCK){
                 BlockHitResult hit = (BlockHitResult) mc.hitResult;
                 if (hit.getDirection().equals(dir_go) && --left_tick < 0){
-                    PlaceBlockHandler.placeBlock(hit);
+                    ActionHandler.placeBlock(hit);
                 } else if (!mc.player.getBlockStateOn().isAir()){
                     base_pos = base_pos.relative(dir_go);
                     mc.options.keyShift.setDown(false);
                     updateNextWalk();
+                    if (!mc.level.getBlockState(base_pos.relative(dir_go)).isAir()){
+                        setCancelled("reached");
+                    }
                 }
             }
         }
