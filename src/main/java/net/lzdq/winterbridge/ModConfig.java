@@ -55,7 +55,7 @@ public class ModConfig {
 
         slot_axe = BUILDER
                 .comment("Slot to place axe")
-                .defineInRange("slot_axe", 4, -1, 8);
+                .defineInRange("slot_axe", 3, -1, 8);
 
         slot_gapple = BUILDER
                 .comment("Slot to place golden apple")

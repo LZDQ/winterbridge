@@ -5,6 +5,7 @@ import net.lzdq.winterbridge.client.CheatMode;
 import net.lzdq.winterbridge.client.action.ActionHandler;
 import net.lzdq.winterbridge.client.action.RotateHandler;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
@@ -59,17 +60,21 @@ public class NinjaDiagonalHandler extends DiagonalBridgeHandler{
         if (getDistWalk() >= ModConfig.ninja_diag_walk_dist.get()){
             mc.options.keyShift.setDown(true);
             current_task = "sneak";
+        } else {
+            mc.options.keyShift.setDown(false);
         }
     }
     @Override
     void sneakTick(){
-        if (mc.player.getOnPos() != base_pos){
+        if (!mc.player.getOnPos().equals(base_pos)){
+            //mc.player.displayClientMessage(Component.literal("on edge"), false);
             if (mc.hitResult.getType() == HitResult.Type.BLOCK){
                 BlockHitResult hit = (BlockHitResult) mc.hitResult;
                 if (hit.getDirection() != Direction.UP &&
                         (hit.getDirection() != last_hit_dir ||
                                 mc.player.position().distanceToSqr(mc.player.xOld, mc.player.yOld, mc.player.zOld)
                                         < 1e-5)){
+                    //mc.player.displayClientMessage(Component.literal("2"), false);
                     //KeyMapping.click(mc.options.keyUse.getKey());
                     if (--left_tick < 0) {
                         ActionHandler.placeBlock(hit);
@@ -77,10 +82,14 @@ public class NinjaDiagonalHandler extends DiagonalBridgeHandler{
                     }
                     //KeyMapping.click(mc.options.keyUse.getKey());
                 } else if (!mc.player.getBlockStateOn().isAir()){
+                    //mc.player.displayClientMessage(Component.literal("3"), false);
+                    //mc.player.displayClientMessage(Component.literal(base_pos.toShortString()), false);
+                    //mc.player.displayClientMessage(Component.literal(mc.player.getOnPos().toShortString()), false);
                     base_pos = base_pos.relative(dir_go_a).relative(dir_go_d);
-                    mc.options.keyShift.setDown(false);
+                    //mc.options.keyShift.setDown(false);
                     updateNextWalk();
-                    if (!mc.level.getBlockState(base_pos.relative(dir_go_a).relative(dir_go_d)).isAir()){
+                    if (!mc.level.getBlockState(base_pos.above().relative(dir_go_a)).isAir() ||
+                            !mc.level.getBlockState(base_pos.above().relative(dir_go_d)).isAir()){
                         setCancelled("reached");
                     }
                 }

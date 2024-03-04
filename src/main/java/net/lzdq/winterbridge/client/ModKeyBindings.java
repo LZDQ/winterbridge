@@ -46,10 +46,16 @@ public final class ModKeyBindings {
             GLFW.GLFW_KEY_F6,
             CATEGORY
     );
-    public final KeyMapping KEY_NINJA_INC = new KeyMapping(
-            "key." + WinterBridge.MODID + ".key_ninja_inc",
+    public final KeyMapping KEY_NINJA_INC1 = new KeyMapping(
+            "key." + WinterBridge.MODID + ".key_ninja_inc1",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_F7,
+            CATEGORY
+    );
+    public final KeyMapping KEY_NINJA_INC3 = new KeyMapping(
+            "key." + WinterBridge.MODID + ".key_ninja_inc3",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F8,
             CATEGORY
     );
     public final KeyMapping KEY_NINJA_DIAG = new KeyMapping(
@@ -102,6 +108,12 @@ public final class ModKeyBindings {
     );
     public final KeyMapping KEY_GAPPLE = new KeyMapping(
             "key." + WinterBridge.MODID + ".key_gapple",
+            InputConstants.Type.KEYSYM,
+            InputConstants.UNKNOWN.getValue(),
+            CATEGORY
+    );
+    public final KeyMapping KEY_STICK = new KeyMapping(
+            "key." + WinterBridge.MODID + ".key_stick",
             InputConstants.Type.KEYSYM,
             InputConstants.UNKNOWN.getValue(),
             CATEGORY

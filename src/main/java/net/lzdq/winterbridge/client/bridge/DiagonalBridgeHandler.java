@@ -2,6 +2,7 @@ package net.lzdq.winterbridge.client.bridge;
 
 import net.lzdq.winterbridge.WinterBridge;
 import net.lzdq.winterbridge.client.CheatMode;
+import net.lzdq.winterbridge.client.action.ActionHandler;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -11,7 +12,6 @@ public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{
     // Template for Diagonal bridge
     Direction dir_go_a, dir_go_d; // Direction of pressing a and d
     Vec3i vec_go;
-    int walk_forward, left_forward, left_up, last_y, left_tick;
     public DiagonalBridgeHandler(){
         super();
         float pitch = mc.player.getYRot();
@@ -47,46 +47,10 @@ public abstract class DiagonalBridgeHandler extends AbstractBridgeHandler{
     }
 
     @Override
-    void walkupTick(){
-        // Same as orthogonal
-        if (base_pos.getY() == last_y) {
-            //WinterBridge.LOGGER.info("BlockY {}", mc.player.getBlockY());
-            mc.options.keyJump.setDown(mc.player.getOnPos().getY() == last_y);
-            if (CheatMode.cheat_mode == 2)  // Sneak in Slightly mode
-                mc.options.keyShift.setDown(true);
-            if (mc.level.getBlockState(base_pos.above()).isAir()){
-                if (mc.player.getY() >= last_y + 1.8) {
-                    /*
-                    if (mc.hitResult.getType() == HitResult.Type.BLOCK){
-                        BlockHitResult hit = (BlockHitResult) mc.hitResult;
-                        if (hit.getBlockPos().equals(base_pos)){
-                            PlaceBlockHandler.placeBlock(hit);
-                        } else {
-                            //mc.player.connection.sendChat("hit: " + hit.getBlockPos().toShortString());
-                            //mc.player.connection.sendChat("base: " + base_pos.toShortString());
-                        }
-                    }
-                    */
-                    KeyMapping.click(mc.options.keyUse.getKey());
-                }
-            } else {
-                base_pos = base_pos.above();
-                current_task = "walk";
-                if (CheatMode.cheat_mode == 2)
-                    mc.options.keyShift.setDown(false);
-                walkTick();
-            }
-        } else {
-            WinterBridge.LOGGER.warn("Warn! Still walkup");
-        }
-    }
-
-    @Override
     void cancelTick(){
         KeyMapping.set(mc.options.keyShift.getKey(), cancel_cause.equals("manual"));
         KeyMapping.set(mc.options.keyDown.getKey(), false);
         KeyMapping.set(mc.options.keyJump.getKey(), false);
         current_task = "finish";
     }
-
 }

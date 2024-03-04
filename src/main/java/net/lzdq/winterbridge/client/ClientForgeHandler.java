@@ -1,5 +1,6 @@
 package net.lzdq.winterbridge.client;
 
+import io.netty.channel.ChannelPipeline;
 import net.lzdq.winterbridge.ModConfig;
 import net.lzdq.winterbridge.WinterBridge;
 import net.lzdq.winterbridge.client.action.ActionHandler;
@@ -58,11 +59,9 @@ public class ClientForgeHandler {
                 bridgeHandler = null;
                 clutchHandler = null;
                 CheatMode.changeCheatMode(ModConfig.cheat_mode.get());
-                /*
                 ChannelPipeline pipeline = mc.getConnection().getConnection().channel().pipeline();
                 pipeline.addBefore("packet_handler", "my_packet_handler", new PacketInspector());
                 WinterBridge.LOGGER.info(pipeline.names().toString());
-                 */
             }
         }
 
@@ -72,8 +71,11 @@ public class ClientForgeHandler {
         if (ModKeyBindings.INSTANCE.KEY_NINJA.consumeClick())
             startBridge("ninja");
 
-        if (ModKeyBindings.INSTANCE.KEY_NINJA_INC.consumeClick())
-            startBridge("ninja_inc");
+        if (ModKeyBindings.INSTANCE.KEY_NINJA_INC1.consumeClick())
+            startBridge("ninja_inc1");
+
+        if (ModKeyBindings.INSTANCE.KEY_NINJA_INC3.consumeClick())
+            startBridge("ninja_inc3");
 
         if (ModKeyBindings.INSTANCE.KEY_NINJA_DIAG.consumeClick())
             startBridge("ninja_diag");
@@ -112,8 +114,11 @@ public class ClientForgeHandler {
         if (ModKeyBindings.INSTANCE.KEY_TOWER.consumeClick())
             switchToItem(Items.CHEST);
 
-        if (ModKeyBindings.INSTANCE.KEY_TOWER.consumeClick())
+        if (ModKeyBindings.INSTANCE.KEY_GAPPLE.consumeClick())
             switchToItem(Items.GOLDEN_APPLE);
+
+        if (ModKeyBindings.INSTANCE.KEY_STICK.consumeClick())
+            switchToItem(Items.STICK);
 
         if (ModKeyBindings.INSTANCE.KEY_HARD_BLOCK.consumeClick()){
             Inventory inv = mc.player.getInventory();
@@ -461,7 +466,7 @@ public class ClientForgeHandler {
         if (ModKeyBindings.INSTANCE.KEY_BLOCKS.isDown()){
             Inventory inv = mc.player.getInventory();
             if (spam_right_mode == 0){
-                if (inv.getSelected().getItem() instanceof BlockItem){
+                if (inv.getSelected().getItem() instanceof BlockItem && inv.getSelected().getCount() > 1){
                     // Already holding block. Start spam-click
                     spam_right_mode = 2;
                 } else {
@@ -477,8 +482,10 @@ public class ClientForgeHandler {
                     inv.selected = slot;
                 }
             }
-            if (spam_right_mode == 2)
-                KeyMapping.click(mc.options.keyUse.getKey());
+            if (spam_right_mode == 2) {
+                //KeyMapping.click(mc.options.keyUse.getKey());
+                ActionHandler.placeBlock();
+            }
         } else spam_right_mode = 0;
     }
     private static void startBridge(String method){

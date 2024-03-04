@@ -26,7 +26,12 @@ public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
                 walk_forward = 0;  // Doesn't matter
                 left_forward = 0;  // Doesn't matter
                 break;
-            case "ninja_inc":
+            case "ninja_inc1":
+                left_up = 1000;
+                walk_forward = 1;
+                left_forward = 1;
+                break;
+            case "ninja_inc3":
                 left_up = 5;
                 walk_forward = 3;
                 left_forward = 2;
@@ -55,6 +60,8 @@ public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
         if (getDistWalk() >= ModConfig.ninja_walk_dist.get()){
             mc.options.keyShift.setDown(true);
             current_task = "sneak";
+        } else {
+            mc.options.keyShift.setDown(false);
         }
     }
     @Override
@@ -66,7 +73,7 @@ public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
                     ActionHandler.placeBlock(hit);
                 } else if (!mc.player.getBlockStateOn().isAir()){
                     base_pos = base_pos.relative(dir_go);
-                    mc.options.keyShift.setDown(false);
+                    //mc.options.keyShift.setDown(false);  This should be done in walk(up)
                     updateNextWalk();
                     if (!mc.level.getBlockState(base_pos.relative(dir_go)).isAir()){
                         setCancelled("reached");
