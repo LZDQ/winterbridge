@@ -33,6 +33,7 @@ public class ModConfig {
     public static final ForgeConfigSpec.IntValue blockin_rotate_tick;
     public static final ForgeConfigSpec.DoubleValue blockin_offset;
     public static final ForgeConfigSpec.BooleanValue use_epearl, use_fireball, use_hard_block;
+    public static final ForgeConfigSpec.IntValue delay_sword;
 
     static {
         BUILDER.push("General Settings");
@@ -143,7 +144,7 @@ public class ModConfig {
 
         spam_left_min = BUILDER
                 .comment("Spam left min interval, ms")
-                .defineInRange("spam_left_min", 30.0, 1.0, 1000.0);
+                .defineInRange("spam_left_min", 35.0, 1.0, 1000.0);
 
         spam_left_max = BUILDER
                 .comment("Spam left max interval, ms")
@@ -172,6 +173,10 @@ public class ModConfig {
         use_hard_block = BUILDER
                 .comment("Whether instantly place hardest block after switching to it")
                 .define("use_hard_block", false);
+
+        delay_sword = BUILDER
+                .comment("Delay after switching to sword, before spam-clicking, in ms")
+                .defineInRange("delay_sword", 100, 0, 200);
 
         BUILDER.pop();
         CONFIG = BUILDER.build();

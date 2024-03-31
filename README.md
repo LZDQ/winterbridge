@@ -18,7 +18,7 @@ This is a bedwars assistant developed by LZDQ. Currently it requires Minecraft 1
 
 ## Usage
 
-**If you don't want to read the long passage, wait for me to release a tutorial video**
+This mod will probably only be used by myself lol, so no video tutorial
 
 #### bridge methods
 
@@ -44,7 +44,7 @@ Please do not use godbridge cause I can't reproduce it legitmately. My godbridge
 
 #### spam clicking
 
-For swords, I strongly suggest binding your hotbar switch button of `1` to your mouse side button (Button 4). When holding down your side button, you start spam clicking your left mouse button every random 30~50 ms. So you can instantly switch to your sword and spam-click. You can't change this behavior.
+For swords, I strongly suggest binding your hotbar switch button of `1` to your mouse side button (Button 4). When holding down your side button, you start spam clicking your left mouse button every random 35~50 ms. So you can instantly switch to your sword and spam-click. To avoid being banned, there is a 50ms delay if you are not holding the sword at the moment. You can't change this behavior.
 
 For blocks, I slightly suggest binding your hotbar switch button of your block slot to your mouse side button (Button 5). This mod has a key of switching to blocks and start spam right clicking. The logic of spam right clicking is as follows:
 
@@ -61,6 +61,8 @@ You can change the slots config in the mod's config file, but the items to sort 
 
 In the configure file, change the `slot_*` to whatever slot you want. `-1` means you don't want to sort it, and `[0,8]` means slot from 1 to 9.
 
+However, this feature is useless with the help of automatic switches.
+
 -----------------
 
 #### block clutch
@@ -71,13 +73,13 @@ When holding block, not on the ground, and clicking left button, the mod will tr
 
 #### auto selecting hardest block
 
-Press a key to select the hardest block. Saves a lot time for block-in, cause when you are digging downwards, you will want to use the hardest block (which you gathered from their bed defense) to block other players. This also saves some time when doing your bed defense. Default order: `Obsidian` -> `End Stone` -> `Wood` -> `Clay` -> `Wool`.
+Press a key to select the hardest block. Saves a lot time for block-in, cause when you are digging downwards, you will want to use the hardest block (which you gathered from their bed defense) to block other players. This also saves some time when doing your bed defense. Default order: `Obsidian` -> `End Stone` -> `Wood` -> `Clay` -> `Wool`. I realize that there is a better way to decide the order but I don't want to bother to change it.
 
 -----
 
 #### block-in
 
-Press a key to cover your nearby area. See video tutorial for more.
+Press a key to cover your nearby area. Instant block-in, and it works.
 
 -----
 
@@ -93,4 +95,4 @@ Tired of typing your password again and again? Now configure your password in th
 
 ## Future work
 
-I also considered other functions such as locating players, anti-invis, but these would spoil game experience. The purpose of this mod is to reduce accident rate of bridging, not to win by hacking.
+I also considered other functions such as locating players, anti-invis, but these would spoil game experience. The purpose of this mod is to reduce accident rate of bridging, not to win by hacking. I really don't want to break my mouse or arm by drag-clicking.

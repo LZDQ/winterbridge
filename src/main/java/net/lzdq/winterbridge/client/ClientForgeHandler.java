@@ -451,9 +451,12 @@ public class ClientForgeHandler {
     }
     private static void handleSpamClickLeft() {
         if (System.currentTimeMillis() < until)
-            return;
+            return ;
         if (mc.options.keyHotbarSlots[ModConfig.slot_sword.get()].isDown()) {
-            mc.player.getInventory().selected = ModConfig.slot_sword.get();
+            if (mc.player.getInventory().selected != ModConfig.slot_sword.get()){
+                until = System.currentTimeMillis() + ModConfig.delay_sword.get();
+                return ;
+            }
             // Spam-click when holding switching to sword
             KeyMapping.click(mc.options.keyAttack.getKey());
             until = (long) (System.currentTimeMillis() +
