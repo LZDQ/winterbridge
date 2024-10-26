@@ -95,4 +95,88 @@ Tired of typing your password again and again? Now configure your password in th
 
 ## Future work
 
-I also considered other functions such as locating players, anti-invis, but these would spoil game experience. The purpose of this mod is to reduce accident rate of bridging, not to win by hacking. I really don't want to break my mouse or arm by drag-clicking.
+#### Modify keybindings.
+
+The (partial) list of items and functions:
+
+1. Gapple. Frequently used, middle latency.
+2. Auto switch to tool. Not frequently used, minimal latency.
+3. Fireball. Frequently used, minimal latency.
+4. Golem and silverfish. Only used in late game, not frequently, small latency. Interferes with PVP.
+5. Hardest block. Seldom used, but could be useful when defending and block-in. Small latency.
+6. TNT. Frequently used, small latency. Interferes with parkour.
+7. Bridge egg. Not frequently used, but needs minimal latency when fleeing and void-clutching.
+8. Pearl. Minimal latency. Requires extra precision (no misclick).
+9. Jump. Not frequently used, middle latency.
+10. Invis, milk, speed. Not frequently used, middle latency.
+11. Ladder. Could be frequently used, middle latency. Interferes with parkour.
+12. KB-stick. Seldom used in late game but requires minimal latency.
+13. Pop-up tower. Seldom used in block-in, middle latency.
+14. Block clutch. Not frequently used but requires minimal latency. Interferes with parkour.
+15. Water. Large latency.
+16. Bow. Large latency. Interferes with PVP.
+17. Other rotational items
+
+Keys available: q, e, r, f, x, 2, 3, t, g, button4, button5, button_thumb=middle, button_extra, button_mid2, button_mid3
+
+
+
+Minimal latency: tools, fireball, egg (when fleeing), pearl, KB-stick (late game), block clutch
+
+Small latency: golem and silverfish, hardest block, TNT
+
+Middle latency: gapple (but frequent), jump, invis and milk and speed, ladder, pop-up tower
+
+Large latency: bow, water.
+
+
+
+#### New features:
+
+1. Put all money into chest
+2. Put all useful items back to slots
+3. Two modes: normal, rushing.
+4. Double-click
+5. Drop all money
+6. Block + Ladder clutch
+7. Send 'inc' message
+
+
+
+#### Bug fixes:
+
+1. Distinguish between TNT and blocks.
+2. Disable some functions when just finished typing and mistyped the hotkey.
+3. Increase Ninja bridge pitch.
+
+
+
+#### Specific functions of each key:
+
+|         | Normal                | Rushing                | Chest          | Inventory      |
+| ------- | --------------------- | ---------------------- | -------------- | -------------- |
+| q       | ladder                | ladder                 | store money    |                |
+| e       | tool, KB-stick or bow | tool, KB-stick or bow  | get money      |                |
+| r       | fireball              | fireball               | tidy slots     | tidy slots     |
+| f       | inventory             | tnt                    | close          | close          |
+| x       | gapple                | gapple                 | set custom g   | set custom g   |
+| 1       | cancel                | cancel                 | unset custom g | unset custom g |
+| 2       | egg                   | egg                    |                |                |
+| 3       | potions               | potions                |                |                |
+| t       | drop money            | block in               |                | drop money     |
+| g       | drop / custom         | hardest block / custom | drop           | drop           |
+| thumb   | pearl                 | pearl                  |                |                |
+| extra   | golem or silverfish   | golem or silverfish    |                |                |
+| alt     | change mode           | change mode            |                |                |
+| middle2 | freecam               | inventory              |                |                |
+| middle3 | tnt                   |                        |                |                |
+
+
+
+## TODO
+
+- [ ] Modify and add keys
+- [ ] Optimize block-in initialization time
+- [ ] Bind double-click with block clutch
+- [ ] Block + ladder clutch (when falling and pressing space)
+- [ ] Fix bugs
