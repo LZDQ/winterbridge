@@ -11,19 +11,19 @@ import org.slf4j.Logger;
 
 @Mod(WinterBridge.MODID)
 public class WinterBridge {
-    public static final String MODID = "winterbridge";
-    public static final Logger LOGGER = LogUtils.getLogger();
-    public WinterBridge(){
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        //modEventBus.addListener(this::commonSetup);
-        MinecraftForge.EVENT_BUS.register(this);
-        //modEventBus.addListener(this::addCreative);
-    }
+	public static final String MODID = "winterbridge";
+	public static final Logger LOGGER = LogUtils.getLogger();
+	public WinterBridge(){
+		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+		//modEventBus.addListener(this::commonSetup);
+		MinecraftForge.EVENT_BUS.register(this);
+		//modEventBus.addListener(this::addCreative);
+	}
 
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event)
-    {
-        // Do something when the server starts
-        LOGGER.info("HELLO from server starting");
-    }
+	@SubscribeEvent
+	public void onServerStarting(ServerStartingEvent event)
+	{
+		// Do something when the server starts
+		LOGGER.info("HELLO from server starting");
+	}
 }

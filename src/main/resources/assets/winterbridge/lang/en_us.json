@@ -5,7 +5,7 @@
   "key.winterbridge.key_record": "Record",
   "key.winterbridge.key_cancel": "Cancel",
   "key.winterbridge.key_blockin": "Block In",
-  "key.winterbridge.key_players": "Get Player Names",
+  "key.winterbridge.key_player_names": "Get Player Names",
   "key.winterbridge.key_blocks": "Switch to blocks or spam right click",
   "key.winterbridge.key_ninja": "Ninja Bridge",
   "key.winterbridge.key_ninja_inc1": "Ninja Staircase",
@@ -19,9 +19,13 @@
   "key.winterbridge.key_egg": "Switch to bridge egg",
   "key.winterbridge.key_tower": "Switch to pop-up tower",
   "key.winterbridge.key_gapple": "Switch to golden apple",
-  "key.winterbridge.key_stick": "Switch to kb-stick and spam left click",
-  "key.winterbridge.key_hard_block": "Switch to (and place) hardest block",
-  "key.winterbridge.key_auto_tool": "Auto switching tool",
+  "key.winterbridge.key_e": "Switch to tool or KB-stick or bow",
+  "key.winterbridge.key_ladder": "Switch to ladder",
   "key.winterbridge.key_auto_login": "Auto login",
-  "key.winterbridge.key_auto_who": "Auto who"
+  "key.winterbridge.key_auto_who": "Auto who",
+  "key.winterbridge.key_normal_tnt": "Switch to tnt",
+  "key.winterbridge.key_normal_drop_money": "Drop iron, gold, dia, eme",
+  "key.winterbridge.key_rushing_hard_block": "Switch to hardest block",
+  "key.winterbridge.key_rushing_tnt": "Switch to tnt (rushing mode)",
+  "key.winterbridge.key_rushing_blockin": "Block-in (rushing mode)"
 }

@@ -14,8 +14,8 @@ public class NinjaBridgeHandler extends OrthogonalBridgeHandler{
         super();
         update(method);
         RotateHandler.init(new Vec2(
-                (float) (ModConfig.ninja_yaw.get().floatValue() + CheatMode.getYawVar()),
-                (float) (dir_go.toYRot() - 135 + CheatMode.getPitchVar())), 10);
+                (float) (ModConfig.ninja_pitch.get().floatValue() + CheatMode.getPitchVar()),
+                (float) (dir_go.toYRot() - 135 + CheatMode.getYawVar())), 10);
         left_tick = 2;
     }
     @Override

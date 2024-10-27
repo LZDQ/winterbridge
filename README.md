@@ -145,11 +145,11 @@ Large latency: bow, water.
 
 #### Bug fixes:
 
-1. Distinguish between TNT and blocks.
-2. Disable some functions when just finished typing and mistyped the hotkey.
-3. Increase Ninja bridge pitch.
+1. - [ ] Distinguish between TNT and blocks.
+2. - [ ] Disable some functions when just finished typing and mistyped the hotkey.
+3. - [x] Increase Ninja bridge pitch.
 
-
+   
 
 #### Specific functions of each key:
 
@@ -168,7 +168,7 @@ Large latency: bow, water.
 | thumb   | pearl                 | pearl                  |                |                |
 | extra   | golem or silverfish   | golem or silverfish    |                |                |
 | alt     | change mode           | change mode            |                |                |
-| middle2 | freecam               | inventory              |                |                |
+| middle2 | freecam               | freecam                |                |                |
 | middle3 | tnt                   |                        |                |                |
 
 
