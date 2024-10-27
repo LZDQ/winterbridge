@@ -2,6 +2,7 @@ package net.lzdq.winterbridge.client;
 
 import io.netty.channel.ChannelPipeline;
 import net.lzdq.winterbridge.ModConfig;
+import static net.lzdq.winterbridge.Utils.*;
 import net.lzdq.winterbridge.WinterBridge;
 import net.lzdq.winterbridge.client.action.ActionHandler;
 import net.lzdq.winterbridge.client.blockin.BlockInHandler;
@@ -105,6 +106,9 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.KEY_CHEAT_MODE.consumeClick())
 				CheatMode.changeCheatMode();
 
+			if (ModKeyBindings.INSTANCE.KEY_CHANGE_RUSHING_MODE.consumeClick())
+				CheatMode.changeRushingMode();
+
 			if (ModKeyBindings.INSTANCE.KEY_FIREBALL.consumeClick())
 				switchToItem(Items.FIRE_CHARGE);
 
@@ -117,7 +121,10 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.KEY_GAPPLE.consumeClick())
 				switchToItem(Items.GOLDEN_APPLE);
 			
-			if (true){ // TODO: add mode
+			if (ModKeyBindings.INSTANCE.KEY_LADDER.consumeClick())
+				switchToItem(Items.LADDER);
+			
+			if (CheatMode.rushing_mode > 0){
 				if (ModKeyBindings.INSTANCE.KEY_RUSHING_TNT.consumeClick()){
 					switchToItem(Items.TNT);
 					if (ModKeyBindings.INSTANCE.KEY_RUSHING_TNT.getKeyConflictContext().conflicts(
@@ -151,7 +158,7 @@ public class ClientForgeHandler {
 			}
 
 			if (ModKeyBindings.INSTANCE.KEY_E.consumeClick())
-				autoSwitchTool();
+				autoE();
 
 			if (ModKeyBindings.INSTANCE.KEY_AUTO_LOGIN.consumeClick())
 				mc.player.connection.sendCommand(ModConfig.auto_login_command.get());
@@ -173,6 +180,8 @@ public class ClientForgeHandler {
 				if (clutchHandler == null)
 					clutchHandler = new BlockClutchHandler();
 			}
+		} else {
+			// Inventory
 		}
 
 		if (System.currentTimeMillis() < until)
@@ -439,18 +448,57 @@ public class ClientForgeHandler {
 				mc.player
 		);
 	}
+
 	public static void autoSwitchTool(){
-		if (mc.hitResult.getType() != HitResult.Type.BLOCK)
-			return ;
-		BlockHitResult hit = (BlockHitResult) mc.hitResult;
-		BlockState blockState = mc.level.getBlockState(hit.getBlockPos());
 		Inventory inv = mc.player.getInventory();
 		int slot = inv.selected;
+		if (mc.hitResult.getType() != HitResult.Type.BLOCK){
+			if (isBlock(inv.getItem(slot))){
+				slot = inv.getFreeSlot();
+				if (slot == -1 || !inv.isHotbarSlot(slot))
+					slot = 0;
+				inv.selected = slot;
+			}
+			return ;
+		}
+		BlockHitResult hit = (BlockHitResult) mc.hitResult;
+		BlockState blockState = mc.level.getBlockState(hit.getBlockPos());
 		for (int i = 0; i < 9; i++)
 			if (inv.getItem(i).getDestroySpeed(blockState) > inv.getItem(slot).getDestroySpeed(blockState))
 				slot = i;
 		inv.selected = slot;
 	}
+
+	public static void autoE(){
+		/*
+		 * Switch to tool, KB-stick or bow.
+		 * Rule: if no KB-stick nor bow, switch to tool. Avoid holding block.
+		 * If has KB-stick or bow, prefer KB-stick. Use 'custom' for bow, or place it next to sword.
+		 * If pointing to block, switch to tool; otherwise switch to KB-stick or bow.
+		 */
+		Inventory inv = mc.player.getInventory();
+		int slot_kb = -1, slot_bow = -1;
+		for (int i=0; i<inv.items.size(); i++){
+			if (inv.getItem(i).is(Items.STICK))
+				slot_kb = i;
+			if (inv.getItem(i).is(Items.BOW))
+				slot_bow = i;
+		}
+		if (slot_kb == -1){
+			if (slot_bow == -1 || mc.hitResult.getType() == HitResult.Type.BLOCK){
+				autoSwitchTool();
+			} else {
+				inv.selected = slot_bow;
+			}
+		} else {
+			if (mc.hitResult.getType() == HitResult.Type.BLOCK){
+				autoSwitchTool();
+			} else {
+				inv.selected = slot_kb;
+			}
+		}
+	}
+
 	private static void handleSpamClickLeft() {
 		if (System.currentTimeMillis() < until)
 			return ;
