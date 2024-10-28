@@ -8,8 +8,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.phys.*;
+
+import static net.lzdq.winterbridge.Utils.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class BlockInHandler {
 			finished = true;
 			return ;
 		}
-		if (!(mc.player.getInventory().getSelected().getItem() instanceof BlockItem)){
+		if (!isBlock(mc.player.getInventory().getSelected())){
 			mc.player.displayClientMessage(
 					Component.literal("Block-in failed: NOT HOLDING BLOCKS")
 							.withStyle(Style.EMPTY.withColor(ModConfig.getColorCancelBridge())),

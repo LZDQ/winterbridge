@@ -8,7 +8,7 @@ import net.minecraft.world.item.Items;
 public final class Utils {
 	public static boolean isBlock(Item item) {
 		// Check whether the item is block EXCLUDE TNT
-		return (item instanceof BlockItem && !item.equals(Items.TNT));
+		return (item instanceof BlockItem && !item.equals(Items.TNT)) && !item.equals(Items.CHEST);
 	}
 	public static boolean isBlock(ItemStack item) {
 		// Check whether the item is block EXCLUDE TNT

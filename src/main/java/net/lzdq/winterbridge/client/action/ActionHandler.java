@@ -1,10 +1,11 @@
 package net.lzdq.winterbridge.client.action;
 
+import static net.lzdq.winterbridge.Utils.*;
+
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -14,7 +15,7 @@ public class ActionHandler {
     public static boolean placeBlock(BlockHitResult hit){
         // Given hitResult, perform using item and return whether succeeded
         Minecraft mc = Minecraft.getInstance();
-        if (!(mc.player.getInventory().getSelected().getItem() instanceof BlockItem))
+        if (!isBlock(mc.player.getInventory().getSelected()))
             return false;
         InteractionHand hand = InteractionHand.MAIN_HAND;
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hit);

@@ -25,6 +25,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.level.block.state.BlockState;
@@ -81,15 +82,17 @@ public class ClientForgeHandler {
 			return;
 
 		inv = mc.player.getInventory();
-		chestOpen = (mc.player.containerMenu.containerId > 0);
+		inventoryOpen = (mc.screen instanceof InventoryScreen);
+		chestOpen = (mc.screen instanceof ContainerScreen);
 
 		if (!inventoryOpen && !chestOpen) { // DONE: add logic to determine whether inventory or chest is open
 			// if (mc.player.containerMenu != null)
-			// 	WinterBridge.LOGGER.debug("containerMenu ID = {}", mc.player.containerMenu.containerId);
+			// WinterBridge.LOGGER.debug("containerMenu ID = {}",
+			// mc.player.containerMenu.containerId);
 			// if (mc.player.containerMenu instanceof InventoryMenu)
-			// 	WinterBridge.LOGGER.debug("Inventory open 1");
+			// WinterBridge.LOGGER.debug("Inventory open 1");
 			// if (mc.player.inventoryMenu != null)
-			// 	WinterBridge.LOGGER.debug("Inventory open 2");
+			// WinterBridge.LOGGER.debug("Inventory open 2");
 			if (ModKeyBindings.INSTANCE.get("ninja").consumeClick())
 				startBridge("ninja");
 
@@ -121,12 +124,14 @@ public class ClientForgeHandler {
 				if (CheatMode.rushing_mode > 0) {
 					for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values())
 						if (key.getCategory().equals(ModKeyBindings.CATEGORY_RUSHING)) {
-							while (key.consumeClick()) ;
+							while (key.consumeClick())
+								;
 						}
 				} else {
 					for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values())
 						if (key.getCategory().equals(ModKeyBindings.CATEGORY_NORMAL)) {
-							while (key.consumeClick()) ;
+							while (key.consumeClick())
+								;
 						}
 				}
 			}
@@ -222,32 +227,56 @@ public class ClientForgeHandler {
 				mc.player.connection.sendCommand("who");
 
 			if (CheatMode.cheat_mode < 2 &&
-					mc.player.getMainHandItem().getItem() instanceof BlockItem &&
+					isBlock(mc.player.getMainHandItem()) &&
 					mc.player.getBlockStateOn().isAir() &&
 					mc.options.keyAttack.consumeClick()) {
 				// Holding block and clicking in the air, activate block clutch
 				if (clutchHandler == null)
 					clutchHandler = new BlockClutchHandler();
 			}
-		} else if (chestOpen) {
-			// WinterBridge.LOGGER.debug("chestOpen");
-			if (mc.player.containerMenu == null) {
-				WinterBridge.LOGGER.error("chestOpen, containerMenu is null");
-			} else if (mc.player.containerMenu.containerId == 0) {
-				WinterBridge.LOGGER.error("chestOpen, containerMenu is 0");
-			} else {
-				// WinterBridge.LOGGER.debug("chest ok");
-				if (ModKeyBindings.INSTANCE.get("store_money").consumeClick())
-					storeMoney();
-				if (ModKeyBindings.INSTANCE.get("get_money").consumeClick())
-					getMoney();
+		} else {
+			// Handle the sharing keys
+			if (ModKeyBindings.INSTANCE.get("store_money").consumeClick())
+				storeMoney();
+			
+			if (ModKeyBindings.INSTANCE.get("get_money").consumeClick())
+				getMoney();
+
+			if (ModKeyBindings.INSTANCE.get("second_slot").consumeClick())
+				swapMenuSlot(1);
+
+			if (ModKeyBindings.INSTANCE.get("last_slot").consumeClick())
+				swapMenuSlot(8);
+
+			if (ModKeyBindings.INSTANCE.get("set_custom").consumeClick())
+				setCustomItem();
+
+			if (ModKeyBindings.INSTANCE.get("unset_custom").consumeClick())
+				customItem = null;
+
+			// Handle the chest keys
+			if (chestOpen) {
+				// WinterBridge.LOGGER.debug("chestOpen");
+				if (mc.player.containerMenu == null) {
+					WinterBridge.LOGGER.error("chestOpen, containerMenu is null");
+				} else if (mc.player.containerMenu.containerId == 0) {
+					WinterBridge.LOGGER.error("chestOpen, containerMenu is 0");
+				} else {
+					// WinterBridge.LOGGER.debug("chest ok");
+				}
 			}
-		} else if (inventoryOpen) {
-			if (mc.player.containerMenu == null) {
-				WinterBridge.LOGGER.debug("chestOpen, containerMenu is null");
-			} else if (mc.player.containerMenu.containerId > 0) {
-				WinterBridge.LOGGER.debug("chestOpen, containerMenu is {}", 
-						mc.player.containerMenu.containerId);
+			// Handle the inventory keys
+			if (inventoryOpen) {
+				if (mc.player.containerMenu == null) {
+					WinterBridge.LOGGER.error("inventoryOpen, containerMenu is null");
+				} else if (mc.player.containerMenu.containerId > 0) {
+					WinterBridge.LOGGER.error("inventoryOpen, containerMenu is {}",
+							mc.player.containerMenu.containerId);
+				} else {
+					if (ModKeyBindings.INSTANCE.get("normal_drop_money").consumeClick()) {
+						inventoryDropMoney();
+					}
+				}
 			}
 		}
 
@@ -343,15 +372,32 @@ public class ClientForgeHandler {
 				}
 	}
 
-	private static void storeMoney(){
-		WinterBridge.LOGGER.info("Storing money into chest");
+	private static void inventoryDropMoney() {
+		InventoryMenu menu = mc.player.inventoryMenu;
+		List<ItemStack> items = menu.getItems();
+		for (Item money : moneyItems)
+			for (int i = 0; i < items.size(); i++)
+				if (items.get(i).is(money)) {
+					mc.gameMode.handleInventoryMouseClick(
+							menu.containerId,
+							i,
+							1, // 0 for throw one, 1 for throw all
+							ClickType.THROW,
+							mc.player);
+					return;
+				}
+	}
+
+	private static void storeMoney() {
+		WinterBridge.LOGGER.info("Storing money into {}", inventoryOpen ? "inventory" : "chest");
 		AbstractContainerMenu menu = mc.player.containerMenu;
 		List<ItemStack> items = menu.getItems();
 		for (Item money : moneyItems)
 			// The last slots are player's inventory
-			for(int i=items.size() - inv.items.size(); i<items.size(); i++)
-				if (items.get(i).is(money)){
-					WinterBridge.LOGGER.debug("Found money at {}, containerId={}", i, mc.player.containerMenu.containerId);
+			for (int i = items.size() - (inventoryOpen ? 9 : inv.items.size()); i < items.size(); i++)
+				if (items.get(i).is(money)) {
+					WinterBridge.LOGGER.debug("Found money at {}, containerId={}", i,
+							menu.containerId);
 					// mc.player.containerMenu.quickMoveStack(mc.player, i);
 					mc.gameMode.handleInventoryMouseClick(
 							menu.containerId,
@@ -362,16 +408,17 @@ public class ClientForgeHandler {
 					return;
 				}
 	}
-	
-	private static void getMoney(){
-		WinterBridge.LOGGER.info("Get money from chest");
+
+	private static void getMoney() {
+		WinterBridge.LOGGER.info("Get money from {}", inventoryOpen ? "inventory" : "chest");
 		AbstractContainerMenu menu = mc.player.containerMenu;
 		List<ItemStack> items = menu.getItems();
 		for (Item money : moneyItems)
 			// The last slots are player's inventory
-			for(int i=0; i<items.size() - inv.items.size(); i++)
-				if (items.get(i).is(money)){
-					WinterBridge.LOGGER.debug("Found money at {}, containerId={}", i, mc.player.containerMenu.containerId);
+			for (int i = 0; i < items.size() - (inventoryOpen ? 9 : inv.items.size()); i++)
+				if (items.get(i).is(money)) {
+					WinterBridge.LOGGER.debug("Found money at {}, containerId={}", i,
+							mc.player.containerMenu.containerId);
 					// mc.player.containerMenu.quickMoveStack(mc.player, i);
 					mc.gameMode.handleInventoryMouseClick(
 							menu.containerId,
@@ -382,7 +429,7 @@ public class ClientForgeHandler {
 					return;
 				}
 	}
-	
+
 	@SubscribeEvent
 	public static void onRenderTick(TickEvent.RenderTickEvent event) {
 		if (event.phase == TickEvent.Phase.END)
@@ -433,7 +480,7 @@ public class ClientForgeHandler {
 			slot = -1;
 			for (int i = 0; i < items.size(); i++) {
 				ItemStack itemstack = items.get(i);
-				if (itemstack.getItem() instanceof BlockItem && itemstack.getCount() > max_count) {
+				if (isBlock(itemstack) && itemstack.getCount() > max_count) {
 					slot = i;
 					max_count = itemstack.getCount();
 				}
@@ -613,13 +660,54 @@ public class ClientForgeHandler {
 		// slot_to is the hotbar id [0, 9)
 		// mc.player.sendOpenInventory();
 		// Inventory inventory = mc.player.getInventory();
-		InventoryMenu inv_menu = mc.player.inventoryMenu;
 		mc.gameMode.handleInventoryMouseClick(
-				inv_menu.containerId,
+				mc.player.inventoryMenu.containerId,
 				slot_from,
 				slot_to,
 				ClickType.SWAP,
 				mc.player);
+	}
+
+	private static void swapMenuSlot(int slot_to) {
+		// slot_to is [0, 8] indicating the inventory slot
+		// Swap it with current menu
+		int slot_from = -1;
+		if (inventoryOpen) {
+			Slot slot = ((InventoryScreen) mc.screen).getSlotUnderMouse();
+			if (slot == null)
+				return;
+			slot_from = slot.getSlotIndex();
+			if (slot_from < 9)
+				slot_from += InventoryMenu.USE_ROW_SLOT_START;
+		} else if (chestOpen) {
+			Slot slot = ((ContainerScreen) mc.screen).getSlotUnderMouse();
+			if (slot == null)
+				return;
+			slot_from = slot.getSlotIndex();
+			if (slot.container == inv) {
+				// WinterBridge.LOGGER.debug("fuck");
+				if (slot_from < 9)
+					slot_from += 36;
+				slot_from += 18;
+			}
+		}
+		if (slot_from != -1)
+			mc.gameMode.handleInventoryMouseClick(
+					mc.player.containerMenu.containerId,
+					slot_from,
+					slot_to,
+					ClickType.SWAP,
+					mc.player);
+	}
+
+	private static void setCustomItem() {
+		if (inventoryOpen) {
+			Slot slot = ((InventoryScreen) mc.screen).getSlotUnderMouse();
+			customItem = slot.getItem().getItem();
+		} else if (chestOpen) {
+			Slot slot = ((ContainerScreen) mc.screen).getSlotUnderMouse();
+			customItem = slot.getItem().getItem();
+		}
 	}
 
 	public static void autoSwitchTool() {
@@ -684,7 +772,7 @@ public class ClientForgeHandler {
 		// Every client tick
 		if (ModKeyBindings.INSTANCE.get("blocks").isDown()) {
 			if (spam_right_mode == 0) {
-				if (inv.getSelected().getItem() instanceof BlockItem && inv.getSelected().getCount() > 1) {
+				if (isBlock(inv.getSelected()) && inv.getSelected().getCount() > 1) {
 					// Already holding block. Start spam-click
 					spam_right_mode = 2;
 				} else {
@@ -692,7 +780,7 @@ public class ClientForgeHandler {
 					spam_right_mode = 1;
 					int slot = inv.selected, mxcnt = 0;
 					for (int i = 0; i < 9; i++)
-						if (inv.getItem(i).getItem() instanceof BlockItem &&
+						if (isBlock(inv.getItem(i)) &&
 								inv.getItem(i).getCount() > mxcnt) {
 							slot = i;
 							mxcnt = inv.getItem(i).getCount();
@@ -749,17 +837,16 @@ public class ClientForgeHandler {
 		KeyMapping.releaseAll(); // Release conflicting keys
 		if (event.getScreen() instanceof InventoryScreen) {
 			WinterBridge.LOGGER.debug("Opened inventory");
-			inventoryOpen = true;
+			// inventoryOpen = true;
 		}
 		if (event.getScreen() instanceof ContainerScreen) {
 			WinterBridge.LOGGER.debug("Opened a container");
 			// chestOpen = true;
 			ContainerScreen chest = (ContainerScreen) event.getScreen();
 			event.setNewScreen(new ContainerScreenWithMoney(
-						chest.getMenu(),
-						inv,
-						chest.getTitle()
-						));
+					chest.getMenu(),
+					inv,
+					chest.getTitle()));
 			// chest.keyPressed();
 			// if ()
 		}
@@ -771,7 +858,7 @@ public class ClientForgeHandler {
 		KeyMapping.releaseAll(); // Release conflicting keys
 		if (event.getScreen() instanceof InventoryScreen) {
 			WinterBridge.LOGGER.debug("Closed inventory");
-			inventoryOpen = false;
+			// inventoryOpen = false;
 		}
 		if (event.getScreen() instanceof ContainerScreen) {
 			WinterBridge.LOGGER.debug("Closed a container");
@@ -780,5 +867,6 @@ public class ClientForgeHandler {
 	}
 
 	@SubscribeEvent
-	public static void onPlayerContainer(PlayerContainerEvent event) { }
+	public static void onPlayerContainer(PlayerContainerEvent event) {
+	}
 }

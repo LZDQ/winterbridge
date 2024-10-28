@@ -66,5 +66,7 @@ public final class ModKeyBindings {
 		add("tidy_slots", CATEGORY_INVENTORY);
 		add("set_custom", CATEGORY_INVENTORY);
 		add("unset_custom", CATEGORY_INVENTORY);
+		add("second_slot", CATEGORY_INVENTORY);
+		add("last_slot", CATEGORY_INVENTORY);
 	}
 }

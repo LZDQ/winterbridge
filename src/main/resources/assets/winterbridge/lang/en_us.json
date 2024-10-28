@@ -37,6 +37,8 @@
   "key.winterbridge.tidy_slots": "Put useless items away from hotbar",
   "key.winterbridge.set_custom": "Set custom item for instant switch",
   "key.winterbridge.unset_custom": "Unset custom item for instant switch",
+  "key.winterbridge.second_slot": "Swap with second slot",
+  "key.winterbridge.last_slot": "Swap with last slot",
 
   "key.winterbridge.test": "Test",
   "key.winterbridge.record": "Record"
