@@ -12,10 +12,10 @@ import org.lwjgl.glfw.GLFW;
 
 public final class ModKeyBindings {
 	public static final ModKeyBindings INSTANCE = new ModKeyBindings();
-	private static final String CATEGORY = "key.categories." + WinterBridge.MODID;
-	private static final String CATEGORY_NORMAL = "key.categories." + WinterBridge.MODID + ".normal";
-	private static final String CATEGORY_RUSHING = "key.categories." + WinterBridge.MODID + ".rushing";
-	private static final String CATEGORY_INVENTORY = "key.categories." + WinterBridge.MODID + ".inventory";
+	public static final String CATEGORY = "key.categories." + WinterBridge.MODID;
+	public static final String CATEGORY_NORMAL = "key.categories." + WinterBridge.MODID + ".normal";
+	public static final String CATEGORY_RUSHING = "key.categories." + WinterBridge.MODID + ".rushing";
+	public static final String CATEGORY_INVENTORY = "key.categories." + WinterBridge.MODID + ".inventory";
 	public Map<String, KeyMapping> keys = new LinkedHashMap<>();
 	private void add(String name, String category, int keyCode){
 		keys.put(name, new KeyMapping("key." + WinterBridge.MODID + "." + name,
@@ -25,6 +25,9 @@ public final class ModKeyBindings {
 	}
 	private void add(String name, String category){
 		add(name, category, InputConstants.UNKNOWN.getValue());
+	}
+	public KeyMapping get(String name){
+		return keys.get(name);
 	}
 	private ModKeyBindings(){
 		add("sort", CATEGORY, GLFW.GLFW_KEY_F4);
@@ -40,19 +43,23 @@ public final class ModKeyBindings {
 		add("epearl", CATEGORY);
 		add("egg", CATEGORY);
 		add("gapple", CATEGORY, GLFW.GLFW_KEY_X);
-		add("ladder", CATEGORY, GLFW.GLFW_KEY_X);
+		add("ladder", CATEGORY);
+		add("bow", CATEGORY);
 		add("potions", CATEGORY);
 		add("func_e", CATEGORY);
 		add("custom", CATEGORY);
 		add("auto_login", CATEGORY);
 		add("auto_who", CATEGORY);
+		
 		// Below are only for normal mode
 		add("normal_tnt", CATEGORY_NORMAL);
 		add("normal_drop_money", CATEGORY_NORMAL);
+
 		// Below are only for rushing mode
 		add("rushing_tnt", CATEGORY_RUSHING);
 		add("rushing_blockin", CATEGORY_RUSHING);
 		add("rushing_hardest_block", CATEGORY_RUSHING);
+		
 		// Below are only for inventory
 		add("store_money", CATEGORY_INVENTORY);
 		add("get_money", CATEGORY_INVENTORY);

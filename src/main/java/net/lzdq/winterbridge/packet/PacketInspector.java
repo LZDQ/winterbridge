@@ -34,20 +34,20 @@ public class PacketInspector extends ChannelDuplexHandler {
 
         if (ignores.stream().anyMatch(clazz -> clazz.isInstance(msg)))
             return ;
-        WinterBridge.LOGGER.info(msg.getClass().getName());
+        WinterBridge.LOGGER.debug(msg.getClass().getName());
         try {
             Gson gson = new Gson();
-            WinterBridge.LOGGER.info(gson.toJson(msg));
+            WinterBridge.LOGGER.debug(gson.toJson(msg));
         } catch (Exception e){
             if (msg instanceof ServerboundContainerClickPacket){
                 ServerboundContainerClickPacket packet = (ServerboundContainerClickPacket) msg;
-                WinterBridge.LOGGER.info("container id " + packet.getContainerId());
-                WinterBridge.LOGGER.info("slot num " + packet.getSlotNum());
-                WinterBridge.LOGGER.info("button num " + packet.getButtonNum());
-                WinterBridge.LOGGER.info("item stack " + packet.getCarriedItem().toString());
-                WinterBridge.LOGGER.info("changed slots " + packet.getChangedSlots().toString());
-                WinterBridge.LOGGER.info("click type " + packet.getClickType().toString());
-                WinterBridge.LOGGER.info("state id " + packet.getStateId());
+                WinterBridge.LOGGER.debug("container id " + packet.getContainerId());
+                WinterBridge.LOGGER.debug("slot num " + packet.getSlotNum());
+                WinterBridge.LOGGER.debug("button num " + packet.getButtonNum());
+                WinterBridge.LOGGER.debug("item stack " + packet.getCarriedItem().toString());
+                WinterBridge.LOGGER.debug("changed slots " + packet.getChangedSlots().toString());
+                WinterBridge.LOGGER.debug("click type " + packet.getClickType().toString());
+                WinterBridge.LOGGER.debug("state id " + packet.getStateId());
             }
         }
     }

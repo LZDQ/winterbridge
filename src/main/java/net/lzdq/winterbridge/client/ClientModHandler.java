@@ -9,7 +9,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
-@Mod.EventBusSubscriber(modid= WinterBridge.MODID, bus=Mod.EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
+@Mod.EventBusSubscriber(modid=WinterBridge.MODID, bus=Mod.EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
 public class ClientModHandler {
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event){
@@ -21,5 +21,4 @@ public class ClientModHandler {
 	public static void onCommonSetup(FMLCommonSetupEvent event) {
 		PacketHandler.register();
 	}
-
 }

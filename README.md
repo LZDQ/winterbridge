@@ -153,23 +153,23 @@ Large latency: bow, water.
 
 #### Specific functions of each key:
 
-|         | Normal                | Rushing                | Chest          | Inventory      |
-| ------- | --------------------- | ---------------------- | -------------- | -------------- |
-| q       | ladder                | ladder                 | store money    |                |
-| e       | tool, KB-stick or bow | tool, KB-stick or bow  | get money      |                |
-| r       | fireball              | fireball               | tidy slots     | tidy slots     |
-| f       | inventory             | tnt                    | close          | close          |
-| x       | gapple                | gapple                 | set custom g   | set custom g   |
-| 1       | cancel                | cancel                 | unset custom g | unset custom g |
-| 2       | egg                   | egg                    |                |                |
-| 3       | potions               | potions                |                |                |
-| t       | drop money            | block in               |                | drop money     |
-| g       | drop / custom         | hardest block / custom | drop           | drop           |
-| thumb   | pearl                 | pearl                  |                |                |
-| extra   | golem or silverfish   | golem or silverfish    |                |                |
-| alt     | change mode           | change mode            |                |                |
-| middle2 | freecam               | freecam                |                |                |
-| middle3 | tnt                   |                        |                |                |
+|         | Normal         | Rushing                | Chest                 | Inventory             |
+| ------- | -------------- | ---------------------- | --------------------- | --------------------- |
+| q       | ladder         | ladder                 | store money           |                       |
+| e       | tool, KB-stick | tool, KB-stick         | get money             |                       |
+| r       | fireball       | fireball               | tidy slots            | tidy slots            |
+| f       | inventory      | tnt                    | close                 | close                 |
+| x       | gapple         | gapple                 | set custom g          | set custom g          |
+| 1       | cancel         | cancel                 | unset custom g        | unset custom g        |
+| 2       | egg            | egg                    | swap with second slot | swap with second slot |
+| 3       | potions        | potions                | swap with last slot   | swap with last slot   |
+| t       | drop money     | block in               |                       | drop money            |
+| g       | drop / custom  | hardest block / custom | drop                  | drop                  |
+| thumb   | pearl          | pearl                  |                       |                       |
+| extra   | bow            | bow                    |                       |                       |
+| alt     | change mode    | change mode            |                       |                       |
+| middle2 | freecam        | freecam                |                       |                       |
+| middle3 | tnt            |                        |                       |                       |
 
 
 

@@ -9,52 +9,63 @@ import net.lzdq.winterbridge.client.blockin.BlockInHandler;
 import net.lzdq.winterbridge.client.bridge.*;
 import net.lzdq.winterbridge.client.clutch.AbstractClutchHandler;
 import net.lzdq.winterbridge.client.clutch.BlockClutchHandler;
+import net.lzdq.winterbridge.client.screen.ContainerScreenWithMoney;
 import net.lzdq.winterbridge.client.action.RotateHandler;
 import net.lzdq.winterbridge.packet.PacketInspector;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.NonNullList;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.*;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
-@Mod.EventBusSubscriber(modid=WinterBridge.MODID, bus=Mod.EventBusSubscriber.Bus.FORGE, value=Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = WinterBridge.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientForgeHandler {
 	static Minecraft mc;
+	static Inventory inv;
 	static boolean is_sorting = false;
 	static boolean cancelled = false;
-	static int spam_right_mode = 0;  // 0 - Not down   1 - Down but not click	2 - Down and click
+	static boolean inventoryOpen = false, chestOpen = false;
+	static int spam_right_mode = 0; // 0 - Not down 1 - Down but not click 2 - Down and click
 	static long until = 0;
 	static AbstractBridgeHandler bridgeHandler;
 	static AbstractClutchHandler clutchHandler;
 	static BlockInHandler blockinHandler;
+	static List<Item> moneyItems = Arrays.asList(Items.EMERALD, Items.DIAMOND, Items.GOLD_INGOT, Items.IRON_INGOT);
+	static Item customItem;
+
 	@SubscribeEvent
-	public static void onClientTick(TickEvent.ClientTickEvent event){
-		if (event.phase == TickEvent.Phase.END) return ;
+	public static void onClientTick(TickEvent.ClientTickEvent event) {
+		if (event.phase == TickEvent.Phase.END)
+			return;
 		mc = Minecraft.getInstance();
 		PacketInspector.connected = (mc.player != null);
-		if (PacketInspector.connected != PacketInspector.modified){
+		if (PacketInspector.connected != PacketInspector.modified) {
 			PacketInspector.modified = PacketInspector.connected;
-			if (PacketInspector.connected){
+			if (PacketInspector.connected) {
 				is_sorting = false;
 				spam_right_mode = 0;
 				bridgeHandler = null;
@@ -62,130 +73,186 @@ public class ClientForgeHandler {
 				CheatMode.changeCheatMode(ModConfig.cheat_mode.get());
 				ChannelPipeline pipeline = mc.getConnection().getConnection().channel().pipeline();
 				pipeline.addBefore("packet_handler", "my_packet_handler", new PacketInspector());
-				WinterBridge.LOGGER.info(pipeline.names().toString());
+				WinterBridge.LOGGER.debug(pipeline.names().toString());
 			}
 		}
 
 		if (!PacketInspector.connected)
-			return ;
+			return;
 
-		// Handle the keys not subjective to mode
+		inv = mc.player.getInventory();
+		chestOpen = (mc.player.containerMenu.containerId > 0);
 
-		if (true){ // TODO: add logic to determine whether inventory or chest is open
-			if (ModKeyBindings.INSTANCE.KEY_NINJA.consumeClick())
+		if (!inventoryOpen && !chestOpen) { // DONE: add logic to determine whether inventory or chest is open
+			// if (mc.player.containerMenu != null)
+			// 	WinterBridge.LOGGER.debug("containerMenu ID = {}", mc.player.containerMenu.containerId);
+			// if (mc.player.containerMenu instanceof InventoryMenu)
+			// 	WinterBridge.LOGGER.debug("Inventory open 1");
+			// if (mc.player.inventoryMenu != null)
+			// 	WinterBridge.LOGGER.debug("Inventory open 2");
+			if (ModKeyBindings.INSTANCE.get("ninja").consumeClick())
 				startBridge("ninja");
 
-			if (ModKeyBindings.INSTANCE.KEY_NINJA_INC1.consumeClick())
-				startBridge("ninja_inc1");
-
-			if (ModKeyBindings.INSTANCE.KEY_NINJA_INC3.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("ninja_inc3").consumeClick())
 				startBridge("ninja_inc3");
 
-			if (ModKeyBindings.INSTANCE.KEY_NINJA_DIAG.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("ninja_diag").consumeClick())
 				startBridge("ninja_diag");
 
-			if (ModKeyBindings.INSTANCE.KEY_NINJA_DIAG_INC.consumeClick())
-				startBridge("ninja_diag_inc");
-
-			if (ModKeyBindings.INSTANCE.KEY_GOD.consumeClick())
-				startBridge("god");
-
-			if (ModKeyBindings.INSTANCE.KEY_SORT.consumeClick()) {
+			if (ModKeyBindings.INSTANCE.get("sort").consumeClick()) {
 				is_sorting = true;
 				cancelled = false;
 			}
 
 			handleSpamClickRight();
 
-			if (ModKeyBindings.INSTANCE.KEY_CANCEL.consumeClick()) {
+			if (ModKeyBindings.INSTANCE.get("cancel").consumeClick()) {
 				cancelled = true;
 				is_sorting = false;
 				RotateHandler.setCancelled();
 			}
 
-			if (ModKeyBindings.INSTANCE.KEY_CHEAT_MODE.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("change_cheat_mode").consumeClick())
 				CheatMode.changeCheatMode();
 
-			if (ModKeyBindings.INSTANCE.KEY_CHANGE_RUSHING_MODE.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("change_rushing_mode").consumeClick()) {
 				CheatMode.changeRushingMode();
+				// Reset all conflicting keys
+				if (CheatMode.rushing_mode > 0) {
+					for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values())
+						if (key.getCategory().equals(ModKeyBindings.CATEGORY_RUSHING)) {
+							while (key.consumeClick()) ;
+						}
+				} else {
+					for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values())
+						if (key.getCategory().equals(ModKeyBindings.CATEGORY_NORMAL)) {
+							while (key.consumeClick()) ;
+						}
+				}
+			}
 
-			if (ModKeyBindings.INSTANCE.KEY_FIREBALL.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("fireball").consumeClick())
 				switchToItem(Items.FIRE_CHARGE);
 
-			if (ModKeyBindings.INSTANCE.KEY_EPEARL.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("epearl").consumeClick())
 				switchToItem(Items.ENDER_PEARL);
 
-			if (ModKeyBindings.INSTANCE.KEY_EGG.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("egg").consumeClick())
 				switchToItem(Items.EGG);
 
-			if (ModKeyBindings.INSTANCE.KEY_GAPPLE.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("gapple").consumeClick())
 				switchToItem(Items.GOLDEN_APPLE);
-			
-			if (ModKeyBindings.INSTANCE.KEY_LADDER.consumeClick())
+
+			if (ModKeyBindings.INSTANCE.get("ladder").consumeClick())
 				switchToItem(Items.LADDER);
-			
-			if (CheatMode.rushing_mode > 0){
-				if (ModKeyBindings.INSTANCE.KEY_RUSHING_TNT.consumeClick()){
-					switchToItem(Items.TNT);
-					if (ModKeyBindings.INSTANCE.KEY_RUSHING_TNT.getKeyConflictContext().conflicts(
-								mc.options.keyInventory.getKeyConflictContext()
-								)){
-						// mc.player.connection.sendChat("consume:" + mc.options.keyInventory.consumeClick());
-						mc.options.keyInventory.consumeClick();
+
+			if (ModKeyBindings.INSTANCE.get("bow").consumeClick())
+				switchToItem(Items.BOW);
+
+			if (ModKeyBindings.INSTANCE.get("potions").consumeClick())
+				switchBetweenPotions();
+
+			if (ModKeyBindings.INSTANCE.get("custom").consumeClick() && customItem != null) {
+				// revoke 'drop'
+				KeyMapping key = ModKeyBindings.INSTANCE.get("custom");
+				if (key.getKeyConflictContext().conflicts(mc.options.keyDrop.getKeyConflictContext()))
+					mc.options.keyDrop.consumeClick();
+				for (int i = 0; i < 9; i++) {
+					if (inv.getItem(i).is(customItem)) {
+						inv.selected = i;
+						break;
 					}
 				}
+			}
 
-				if (ModKeyBindings.INSTANCE.KEY_RUSHING_HARD_BLOCK.consumeClick()){
-					Inventory inv = mc.player.getInventory();
+			if (CheatMode.rushing_mode > 0) {
+				// Rushing mode.
+				if (ModKeyBindings.INSTANCE.get("rushing_tnt").consumeClick()) {
+					switchToItem(Items.TNT);
+					if (ModKeyBindings.INSTANCE.get("rushing_tnt").getKeyConflictContext().conflicts(
+							mc.options.keyInventory.getKeyConflictContext()))
+						mc.options.keyInventory.consumeClick();
+				}
+
+				if (ModKeyBindings.INSTANCE.get("rushing_hardest_block").consumeClick()) {
+					if (ModKeyBindings.INSTANCE.get("rushing_hardest_block").getKeyConflictContext().conflicts(
+							mc.options.keyDrop.getKeyConflictContext()))
+						mc.options.keyDrop.consumeClick();
 					String[] blocks = {
-						"Obsidian",
-						"End Stone",
-						"Plank", "Log",
-						"Clay",
-						"Wool"
+							"Obsidian",
+							"End Stone",
+							"Plank", "Log",
+							"Clay",
+							"Wool"
 					};
-					for (int i = 0; i < 9; i++){
-						for (String s : blocks){
+					for (int i = 0; i < 9; i++) {
+						for (String s : blocks) {
 							if (inv.getSelected().getDisplayName().getString().contains(s))
 								break;
-							if (inv.getItem(i).getDisplayName().getString().contains(s)){
+							if (inv.getItem(i).getDisplayName().getString().contains(s)) {
 								inv.selected = i;
 								break;
 							}
 						}
 					}
 				}
+
+				if (ModKeyBindings.INSTANCE.get("rushing_blockin").consumeClick()) {
+					cancelled = false;
+					if (blockinHandler == null)
+						blockinHandler = new BlockInHandler();
+				}
+
+			} else {
+				// Normal mode
+				if (ModKeyBindings.INSTANCE.get("normal_drop_money").consumeClick())
+					normalDropMoney();
+
+				if (ModKeyBindings.INSTANCE.get("normal_tnt").consumeClick())
+					switchToItem(Items.TNT);
 			}
 
-			if (ModKeyBindings.INSTANCE.KEY_E.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("func_e").consumeClick())
 				autoE();
 
-			if (ModKeyBindings.INSTANCE.KEY_AUTO_LOGIN.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("auto_login").consumeClick())
 				mc.player.connection.sendCommand(ModConfig.auto_login_command.get());
 
-			if (ModKeyBindings.INSTANCE.KEY_AUTO_WHO.consumeClick())
+			if (ModKeyBindings.INSTANCE.get("auto_who").consumeClick())
 				mc.player.connection.sendCommand("who");
-
-			if (ModKeyBindings.INSTANCE.KEY_RUSHING_BLOCKIN.consumeClick()){
-				cancelled = false;
-				if (blockinHandler == null)
-					blockinHandler = new BlockInHandler();
-			}
 
 			if (CheatMode.cheat_mode < 2 &&
 					mc.player.getMainHandItem().getItem() instanceof BlockItem &&
 					mc.player.getBlockStateOn().isAir() &&
-					mc.options.keyAttack.consumeClick()){
+					mc.options.keyAttack.consumeClick()) {
 				// Holding block and clicking in the air, activate block clutch
 				if (clutchHandler == null)
 					clutchHandler = new BlockClutchHandler();
 			}
-		} else {
-			// Inventory
+		} else if (chestOpen) {
+			// WinterBridge.LOGGER.debug("chestOpen");
+			if (mc.player.containerMenu == null) {
+				WinterBridge.LOGGER.error("chestOpen, containerMenu is null");
+			} else if (mc.player.containerMenu.containerId == 0) {
+				WinterBridge.LOGGER.error("chestOpen, containerMenu is 0");
+			} else {
+				// WinterBridge.LOGGER.debug("chest ok");
+				if (ModKeyBindings.INSTANCE.get("store_money").consumeClick())
+					storeMoney();
+				if (ModKeyBindings.INSTANCE.get("get_money").consumeClick())
+					getMoney();
+			}
+		} else if (inventoryOpen) {
+			if (mc.player.containerMenu == null) {
+				WinterBridge.LOGGER.debug("chestOpen, containerMenu is null");
+			} else if (mc.player.containerMenu.containerId > 0) {
+				WinterBridge.LOGGER.debug("chestOpen, containerMenu is {}", 
+						mc.player.containerMenu.containerId);
+			}
 		}
 
 		if (System.currentTimeMillis() < until)
-			return ;
+			return;
 
 		if (is_sorting && !cancelled)
 			sortItems();
@@ -198,45 +265,140 @@ public class ClientForgeHandler {
 				bridgeHandler = null;
 		}
 
-		if (clutchHandler != null){
+		if (clutchHandler != null) {
 			if (clutchHandler.isFinished())
 				clutchHandler = null;
-			else clutchHandler.tick();
+			else
+				clutchHandler.tick();
 		}
 
-		if (blockinHandler != null){
+		if (blockinHandler != null) {
 			if (blockinHandler.isFinished())
 				blockinHandler = null;
 			else if (cancelled)
 				blockinHandler = null;
-			else blockinHandler.tick();
+			else
+				blockinHandler.tick();
 		}
 
 		RotateHandler.tick();
 	}
-	private static boolean switchToItem(Item item){
-		Inventory inv = mc.player.getInventory();
+
+	private static boolean switchToItem(Item item) {
 		for (int i = 0; i < 9; i++)
-			if (inv.getItem(i).is(item)){
+			if (inv.getItem(i).is(item)) {
 				inv.selected = i;
 				return true;
 			}
 		return false;
 	}
+
+	private static void switchBetweenPotions() {
+		List<String> potions = Arrays.asList("jump", "invis", "milk", "speed");
+		List<String> tp = new ArrayList<>();
+
+		for (int i = 0; i < 9; i++) {
+			ItemStack stack = inv.getItem(i);
+			tp.add("");
+			if (stack.getItem() instanceof PotionItem) {
+				WinterBridge.LOGGER.debug("potion at {} slot", i);
+				for (MobEffectInstance effect : PotionUtils.getMobEffects(stack)) {
+					if (effect.getEffect() == MobEffects.JUMP)
+						tp.set(i, "jump");
+					else if (effect.getEffect() == MobEffects.INVISIBILITY)
+						tp.set(i, "invis");
+					else if (effect.getEffect() == MobEffects.MOVEMENT_SPEED)
+						tp.set(i, "speed");
+				}
+			} else if (stack.is(Items.MILK_BUCKET)) {
+				tp.set(i, "milk");
+			}
+		}
+		WinterBridge.LOGGER.debug("type in hand: {}", tp.get(inv.selected));
+		for (int i = 1; i <= potions.size(); i++) {
+			// i is the offset, j is the real one switching to
+			// When not holding a potion, indexOf starts at -1
+			int j = (i + potions.indexOf(tp.get(inv.selected))) % potions.size();
+			int k = tp.indexOf(potions.get(j));
+			if (k != -1) {
+				inv.selected = k;
+				return;
+			}
+		}
+	}
+
+	private static void normalDropMoney() {
+		// Drop money (from emerald to iron). Inventory not open
+		int t = moneyItems.indexOf(inv.getSelected().getItem());
+		if (t != -1) {
+			// Drop all money in the current slot
+			mc.player.drop(true);
+			return;
+		}
+		for (Item money : moneyItems)
+			for (int i = 0; i < 9; i++)
+				if (inv.getItem(i).is(money)) {
+					inv.selected = i;
+					return;
+				}
+	}
+
+	private static void storeMoney(){
+		WinterBridge.LOGGER.info("Storing money into chest");
+		AbstractContainerMenu menu = mc.player.containerMenu;
+		List<ItemStack> items = menu.getItems();
+		for (Item money : moneyItems)
+			// The last slots are player's inventory
+			for(int i=items.size() - inv.items.size(); i<items.size(); i++)
+				if (items.get(i).is(money)){
+					WinterBridge.LOGGER.debug("Found money at {}, containerId={}", i, mc.player.containerMenu.containerId);
+					// mc.player.containerMenu.quickMoveStack(mc.player, i);
+					mc.gameMode.handleInventoryMouseClick(
+							menu.containerId,
+							i,
+							0,
+							ClickType.QUICK_MOVE,
+							mc.player);
+					return;
+				}
+	}
+	
+	private static void getMoney(){
+		WinterBridge.LOGGER.info("Get money from chest");
+		AbstractContainerMenu menu = mc.player.containerMenu;
+		List<ItemStack> items = menu.getItems();
+		for (Item money : moneyItems)
+			// The last slots are player's inventory
+			for(int i=0; i<items.size() - inv.items.size(); i++)
+				if (items.get(i).is(money)){
+					WinterBridge.LOGGER.debug("Found money at {}, containerId={}", i, mc.player.containerMenu.containerId);
+					// mc.player.containerMenu.quickMoveStack(mc.player, i);
+					mc.gameMode.handleInventoryMouseClick(
+							menu.containerId,
+							i,
+							0,
+							ClickType.QUICK_MOVE,
+							mc.player);
+					return;
+				}
+	}
+	
 	@SubscribeEvent
-	public static void onRenderTick(TickEvent.RenderTickEvent event){
+	public static void onRenderTick(TickEvent.RenderTickEvent event) {
 		if (event.phase == TickEvent.Phase.END)
-			return ;
+			return;
 		handleSpamClickLeft();
 	}
-	private static boolean doSwap(int slot, int dest){
+
+	private static boolean doSwap(int slot, int dest) {
 		if (slot == -1 || slot == dest + InventoryMenu.USE_ROW_SLOT_START)
 			return false;
 		swapSlot(slot, dest);
 		until = (long) (System.currentTimeMillis() + ModConfig.sort_delay.get() * (Math.random() * 0.3 + 0.7));
 		return true;
 	}
-	private static void sortItems(){
+
+	private static void sortItems() {
 		Minecraft mc = Minecraft.getInstance();
 		InventoryMenu inv_menu = mc.player.inventoryMenu;
 		List<ItemStack> items = inv_menu.getItems();
@@ -261,7 +423,8 @@ public class ClientForgeHandler {
 					break;
 			}
 			// slot will be [0, items.size()) if it exists and -1 otherwise
-			if (doSwap(slot, ModConfig.slot_sword.get())) return;
+			if (doSwap(slot, ModConfig.slot_sword.get()))
+				return;
 		}
 
 		// Block
@@ -275,7 +438,8 @@ public class ClientForgeHandler {
 					max_count = itemstack.getCount();
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_block.get())) return;
+			if (doSwap(slot, ModConfig.slot_block.get()))
+				return;
 		}
 
 		// Shear
@@ -288,7 +452,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_shear.get())) return;
+			if (doSwap(slot, ModConfig.slot_shear.get()))
+				return;
 		}
 
 		// Pickaxe
@@ -311,7 +476,8 @@ public class ClientForgeHandler {
 				if (slot != -1)
 					break;
 			}
-			if (doSwap(slot, ModConfig.slot_pickaxe.get())) return;
+			if (doSwap(slot, ModConfig.slot_pickaxe.get()))
+				return;
 		}
 
 		// Axe
@@ -334,7 +500,8 @@ public class ClientForgeHandler {
 				if (slot != -1)
 					break;
 			}
-			if (doSwap(slot, ModConfig.slot_axe.get())) return;
+			if (doSwap(slot, ModConfig.slot_axe.get()))
+				return;
 		}
 
 		// Gapple
@@ -347,7 +514,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_gapple.get())) return;
+			if (doSwap(slot, ModConfig.slot_gapple.get()))
+				return;
 		}
 
 		// Fireball
@@ -360,7 +528,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_fireball.get())) return;
+			if (doSwap(slot, ModConfig.slot_fireball.get()))
+				return;
 		}
 
 		// TNT
@@ -373,7 +542,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_tnt.get())) return;
+			if (doSwap(slot, ModConfig.slot_tnt.get()))
+				return;
 		}
 
 		// Ladder
@@ -386,7 +556,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_ladder.get())) return;
+			if (doSwap(slot, ModConfig.slot_ladder.get()))
+				return;
 		}
 
 		// Knock-back stick
@@ -399,7 +570,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_kbstick.get())) return;
+			if (doSwap(slot, ModConfig.slot_kbstick.get()))
+				return;
 		}
 
 		// Bridge egg
@@ -412,7 +584,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_egg.get())) return;
+			if (doSwap(slot, ModConfig.slot_egg.get()))
+				return;
 		}
 
 		// Pop-up tower
@@ -425,7 +598,8 @@ public class ClientForgeHandler {
 					break;
 				}
 			}
-			if (doSwap(slot, ModConfig.slot_tower.get())) return;
+			if (doSwap(slot, ModConfig.slot_tower.get()))
+				return;
 		}
 
 		mc.player.closeContainer();
@@ -433,33 +607,31 @@ public class ClientForgeHandler {
 
 		is_sorting = false;
 	}
-	private static void swapSlot(int slot_from, int slot_to){
+
+	private static void swapSlot(int slot_from, int slot_to) {
 		// slot_from is the inventory id (for hotbar, it is [36, 45) )
 		// slot_to is the hotbar id [0, 9)
-		Minecraft mc = Minecraft.getInstance();
-		//mc.player.sendOpenInventory();
-		//Inventory inventory = mc.player.getInventory();
+		// mc.player.sendOpenInventory();
+		// Inventory inventory = mc.player.getInventory();
 		InventoryMenu inv_menu = mc.player.inventoryMenu;
 		mc.gameMode.handleInventoryMouseClick(
 				inv_menu.containerId,
 				slot_from,
 				slot_to,
 				ClickType.SWAP,
-				mc.player
-		);
+				mc.player);
 	}
 
-	public static void autoSwitchTool(){
-		Inventory inv = mc.player.getInventory();
+	public static void autoSwitchTool() {
 		int slot = inv.selected;
-		if (mc.hitResult.getType() != HitResult.Type.BLOCK){
-			if (isBlock(inv.getItem(slot))){
+		if (mc.hitResult.getType() != HitResult.Type.BLOCK) {
+			if (isBlock(inv.getItem(slot))) {
 				slot = inv.getFreeSlot();
-				if (slot == -1 || !inv.isHotbarSlot(slot))
+				if (slot == -1 || !Inventory.isHotbarSlot(slot))
 					slot = 0;
 				inv.selected = slot;
 			}
-			return ;
+			return;
 		}
 		BlockHitResult hit = (BlockHitResult) mc.hitResult;
 		BlockState blockState = mc.level.getBlockState(hit.getBlockPos());
@@ -469,29 +641,22 @@ public class ClientForgeHandler {
 		inv.selected = slot;
 	}
 
-	public static void autoE(){
+	public static void autoE() {
 		/*
-		 * Switch to tool, KB-stick or bow.
-		 * Rule: if no KB-stick nor bow, switch to tool. Avoid holding block.
-		 * If has KB-stick or bow, prefer KB-stick. Use 'custom' for bow, or place it next to sword.
-		 * If pointing to block, switch to tool; otherwise switch to KB-stick or bow.
+		 * Switch to tool or KB-stick.
+		 * Rule: if no KB-stick, switch to tool. Avoid holding block.
+		 * If pointing to block, switch to tool; otherwise switch to KB-stick.
 		 */
-		Inventory inv = mc.player.getInventory();
-		int slot_kb = -1, slot_bow = -1;
-		for (int i=0; i<inv.items.size(); i++){
-			if (inv.getItem(i).is(Items.STICK))
+		int slot_kb = -1;
+		for (int i = 0; i < inv.items.size(); i++)
+			if (inv.getItem(i).is(Items.STICK)) {
 				slot_kb = i;
-			if (inv.getItem(i).is(Items.BOW))
-				slot_bow = i;
-		}
-		if (slot_kb == -1){
-			if (slot_bow == -1 || mc.hitResult.getType() == HitResult.Type.BLOCK){
-				autoSwitchTool();
-			} else {
-				inv.selected = slot_bow;
+				break;
 			}
+		if (slot_kb == -1) {
+			autoSwitchTool();
 		} else {
-			if (mc.hitResult.getType() == HitResult.Type.BLOCK){
+			if (mc.hitResult.getType() == HitResult.Type.BLOCK) {
 				autoSwitchTool();
 			} else {
 				inv.selected = slot_kb;
@@ -501,11 +666,11 @@ public class ClientForgeHandler {
 
 	private static void handleSpamClickLeft() {
 		if (System.currentTimeMillis() < until)
-			return ;
+			return;
 		if (mc.options.keyHotbarSlots[ModConfig.slot_sword.get()].isDown()) {
-			if (mc.player.getInventory().selected != ModConfig.slot_sword.get()){
+			if (mc.player.getInventory().selected != ModConfig.slot_sword.get()) {
 				until = System.currentTimeMillis() + ModConfig.delay_sword.get();
-				return ;
+				return;
 			}
 			// Spam-click when holding switching to sword
 			KeyMapping.click(mc.options.keyAttack.getKey());
@@ -514,12 +679,12 @@ public class ClientForgeHandler {
 					Math.random() * (ModConfig.spam_left_max.get() - ModConfig.spam_left_min.get()));
 		}
 	}
-	private static void handleSpamClickRight(){
+
+	private static void handleSpamClickRight() {
 		// Every client tick
-		if (ModKeyBindings.INSTANCE.KEY_BLOCKS.isDown()){
-			Inventory inv = mc.player.getInventory();
-			if (spam_right_mode == 0){
-				if (inv.getSelected().getItem() instanceof BlockItem && inv.getSelected().getCount() > 1){
+		if (ModKeyBindings.INSTANCE.get("blocks").isDown()) {
+			if (spam_right_mode == 0) {
+				if (inv.getSelected().getItem() instanceof BlockItem && inv.getSelected().getCount() > 1) {
 					// Already holding block. Start spam-click
 					spam_right_mode = 2;
 				} else {
@@ -528,7 +693,7 @@ public class ClientForgeHandler {
 					int slot = inv.selected, mxcnt = 0;
 					for (int i = 0; i < 9; i++)
 						if (inv.getItem(i).getItem() instanceof BlockItem &&
-								inv.getItem(i).getCount() > mxcnt){
+								inv.getItem(i).getCount() > mxcnt) {
 							slot = i;
 							mxcnt = inv.getItem(i).getCount();
 						}
@@ -536,19 +701,20 @@ public class ClientForgeHandler {
 				}
 			}
 			if (spam_right_mode == 2) {
-				//KeyMapping.click(mc.options.keyUse.getKey());
+				// KeyMapping.click(mc.options.keyUse.getKey());
 				ActionHandler.placeBlock();
 			}
-		} else spam_right_mode = 0;
+		} else
+			spam_right_mode = 0;
 	}
-	private static void startBridge(String method){
+
+	private static void startBridge(String method) {
 		mc.player.displayClientMessage(
 				Component.literal("Start bridge: " + method)
 						.withStyle(Style.EMPTY.withColor(ModConfig.getColorStartBridge())),
-				true
-		);
+				true);
 		cancelled = false;
-		if (bridgeHandler == null){
+		if (bridgeHandler == null) {
 			if (method.startsWith("ninja") && !method.startsWith("ninja_diag"))
 				bridgeHandler = new NinjaBridgeHandler(method);
 			else if (method.startsWith("ninja_diag"))
@@ -559,12 +725,14 @@ public class ClientForgeHandler {
 			bridgeHandler.update(method);
 		}
 	}
+
 	@SubscribeEvent
-	public static void onLivingHurt(LivingHurtEvent event){
-		//BridgeMod.LOGGER.info(event.getEntity().getName().getString() + " has been hurt!");
+	public static void onLivingHurt(LivingHurtEvent event) {
+		// BridgeMod.LOGGER.debug(event.getEntity().getName().getString() + " has been
+		// hurt!");
 		if (event.getEntity() instanceof Player) {
 			Player player = (Player) event.getEntity();
-			if(player == mc.player){
+			if (player == mc.player) {
 				// Hit
 				// AutoCancel
 				if (bridgeHandler != null)
@@ -574,5 +742,43 @@ public class ClientForgeHandler {
 			}
 		}
 	}
-}
 
+	@SubscribeEvent
+	public static void onScreenOpen(ScreenEvent.Opening event) {
+		// WinterBridge.LOGGER.debug("ScreenEvent. {}", event);
+		KeyMapping.releaseAll(); // Release conflicting keys
+		if (event.getScreen() instanceof InventoryScreen) {
+			WinterBridge.LOGGER.debug("Opened inventory");
+			inventoryOpen = true;
+		}
+		if (event.getScreen() instanceof ContainerScreen) {
+			WinterBridge.LOGGER.debug("Opened a container");
+			// chestOpen = true;
+			ContainerScreen chest = (ContainerScreen) event.getScreen();
+			event.setNewScreen(new ContainerScreenWithMoney(
+						chest.getMenu(),
+						inv,
+						chest.getTitle()
+						));
+			// chest.keyPressed();
+			// if ()
+		}
+	}
+
+	@SubscribeEvent
+	public static void onScreenClose(ScreenEvent.Closing event) {
+		// WinterBridge.LOGGER.debug("ScreenEvent. {}", event);
+		KeyMapping.releaseAll(); // Release conflicting keys
+		if (event.getScreen() instanceof InventoryScreen) {
+			WinterBridge.LOGGER.debug("Closed inventory");
+			inventoryOpen = false;
+		}
+		if (event.getScreen() instanceof ContainerScreen) {
+			WinterBridge.LOGGER.debug("Closed a container");
+			// chestOpen = false;
+		}
+	}
+
+	@SubscribeEvent
+	public static void onPlayerContainer(PlayerContainerEvent event) { }
+}

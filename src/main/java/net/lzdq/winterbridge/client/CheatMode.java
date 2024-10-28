@@ -37,13 +37,13 @@ public class CheatMode {
 		Minecraft.getInstance().player.displayClientMessage(Component.literal(cheat_mode_names[cheat_mode]), true);
 	}
 	public static void changeCheatMode(){
-		changeCheatMode((cheat_mode + 1) % 3);
+		changeCheatMode((cheat_mode + 1) % cheat_mode_names.length);
 	}
 	public static void changeRushingMode(int mode){
 		rushing_mode = mode;
 		Minecraft.getInstance().player.displayClientMessage(Component.literal(rushing_mode_names[rushing_mode]), true);
 	}
 	public static void changeRushingMode(){
-		changeRushingMode((rushing_mode + 1) % 3);
+		changeRushingMode((rushing_mode + 1) % rushing_mode_names.length);
 	}
 }

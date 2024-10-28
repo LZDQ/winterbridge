@@ -18,17 +18,18 @@
   "key.winterbridge.egg": "Switch to bridge egg",
   "key.winterbridge.gapple": "Switch to golden apple",
   "key.winterbridge.ladder": "Switch to ladder",
+  "key.winterbridge.bow": "Switch to bow",
   "key.winterbridge.potions": "Switch to potions",
-  "key.winterbridge.func_e": "Switch to tool or KB-stick or bow",
-  "key.winterbridge.custom": "Switch to tool or KB-stick or bow",
+  "key.winterbridge.func_e": "Switch to tool or KB-stick",
+  "key.winterbridge.custom": "Switch to custom item",
   "key.winterbridge.auto_login": "Auto login",
   "key.winterbridge.auto_who": "Auto who",
 
-  "key.winterbridge.normal_tnt": "Switch to tnt",
+  "key.winterbridge.normal_tnt": "Switch to tnt (normal mode)",
   "key.winterbridge.normal_drop_money": "Drop iron, gold, dia, eme",
 
   "key.winterbridge.rushing_tnt": "Switch to tnt (rushing mode)",
-  "key.winterbridge.rushing_blockin": "Block-in (rushing mode)",
+  "key.winterbridge.rushing_blockin": "Block-in",
   "key.winterbridge.rushing_hardest_block": "Switch to hardest block",
 
   "key.winterbridge.store_money": "Store money into chest",
