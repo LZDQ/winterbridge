@@ -5,6 +5,7 @@ import net.lzdq.winterbridge.ModConfig;
 import static net.lzdq.winterbridge.Utils.*;
 import net.lzdq.winterbridge.WinterBridge;
 import net.lzdq.winterbridge.client.action.ActionHandler;
+import net.lzdq.winterbridge.client.action.DoubleClickHandler;
 import net.lzdq.winterbridge.client.blockin.BlockInHandler;
 import net.lzdq.winterbridge.client.bridge.*;
 import net.lzdq.winterbridge.client.clutch.AbstractClutchHandler;
@@ -16,6 +17,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -28,14 +30,17 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec2;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.PlayerContainerEvent;
+import net.minecraftforge.event.level.BlockEvent.BreakEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -55,6 +60,7 @@ public class ClientForgeHandler {
 	static AbstractBridgeHandler bridgeHandler;
 	static AbstractClutchHandler clutchHandler;
 	static BlockInHandler blockinHandler;
+	static DoubleClickHandler doubleClickHandler;
 	static List<Item> moneyItems = Arrays.asList(Items.EMERALD, Items.DIAMOND, Items.GOLD_INGOT, Items.IRON_INGOT);
 	static Item customItem;
 
@@ -148,8 +154,10 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.get("gapple").consumeClick())
 				switchToItem(Items.GOLDEN_APPLE);
 
-			if (ModKeyBindings.INSTANCE.get("ladder").consumeClick())
-				switchToItem(Items.LADDER);
+			if (ModKeyBindings.INSTANCE.get("ladder_or_def").consumeClick()){
+				if (!switchToItem(Items.LADDER))
+					switchToHardestBlock();
+			}
 
 			if (ModKeyBindings.INSTANCE.get("bow").consumeClick())
 				switchToItem(Items.BOW);
@@ -183,23 +191,7 @@ public class ClientForgeHandler {
 					if (ModKeyBindings.INSTANCE.get("rushing_hardest_block").getKeyConflictContext().conflicts(
 							mc.options.keyDrop.getKeyConflictContext()))
 						mc.options.keyDrop.consumeClick();
-					String[] blocks = {
-							"Obsidian",
-							"End Stone",
-							"Plank", "Log",
-							"Clay",
-							"Wool"
-					};
-					for (int i = 0; i < 9; i++) {
-						for (String s : blocks) {
-							if (inv.getSelected().getDisplayName().getString().contains(s))
-								break;
-							if (inv.getItem(i).getDisplayName().getString().contains(s)) {
-								inv.selected = i;
-								break;
-							}
-						}
-					}
+					switchToHardestBlock();
 				}
 
 				if (ModKeyBindings.INSTANCE.get("rushing_blockin").consumeClick()) {
@@ -226,14 +218,34 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.get("auto_who").consumeClick())
 				mc.player.connection.sendCommand("who");
 
+			if (ModKeyBindings.INSTANCE.get("auto_send_inc").consumeClick())
+				mc.player.connection.sendChat("inc");
+
 			if (CheatMode.cheat_mode < 2 &&
 					isBlock(mc.player.getMainHandItem()) &&
-					mc.player.getBlockStateOn().isAir() &&
 					mc.options.keyAttack.consumeClick()) {
-				// Holding block and clicking in the air, activate block clutch
-				if (clutchHandler == null)
-					clutchHandler = new BlockClutchHandler();
+				// Holding block and clicking. Block clutch or double-click
+				// If onGround or has block 5 below, do a double-click
+				// otherwise do a block clutch
+				boolean isDoubleClick = mc.player.isOnGround();
+				BlockPos pos = mc.player.getOnPos();
+				for(int i=0; !isDoubleClick && i<5; i++){
+					if (!mc.level.getBlockState(pos).isAir())
+						isDoubleClick = true;
+					pos = pos.below();
+				}
+				if (isDoubleClick){
+					if (doubleClickHandler == null)
+						doubleClickHandler = new DoubleClickHandler();
+				} else {
+					if (clutchHandler == null)
+						clutchHandler = new BlockClutchHandler();
+				}
 			}
+
+			if (CheatMode.cheat_mode < 2 && mc.options.keyJump.isDown() && mc.player.fallDistance > 4)
+				blockLadderClutch();
+			
 		} else {
 			// Handle the sharing keys
 			if (ModKeyBindings.INSTANCE.get("store_money").consumeClick())
@@ -308,6 +320,12 @@ public class ClientForgeHandler {
 				blockinHandler = null;
 			else
 				blockinHandler.tick();
+		}
+
+		if (doubleClickHandler != null){
+			if (doubleClickHandler.isFinished())
+				doubleClickHandler = null;
+			else doubleClickHandler.tick();
 		}
 
 		RotateHandler.tick();
@@ -429,7 +447,27 @@ public class ClientForgeHandler {
 					return;
 				}
 	}
-
+	
+	private static void switchToHardestBlock(){
+		String[] blocks = {
+			"Obsidian",
+			"Clay", // Use clay for inner-most layer def
+			"End Stone",
+			"Plank", "Log",
+			"Wool"
+		};
+		for (int i = 0; i < 9; i++) {
+			for (String s : blocks) {
+				if (inv.getSelected().getDisplayName().getString().contains(s))
+					break;
+				if (inv.getItem(i).getDisplayName().getString().contains(s)) {
+					inv.selected = i;
+					break;
+				}
+			}
+		}
+	}
+	
 	@SubscribeEvent
 	public static void onRenderTick(TickEvent.RenderTickEvent event) {
 		if (event.phase == TickEvent.Phase.END)
@@ -710,7 +748,39 @@ public class ClientForgeHandler {
 		}
 	}
 
-	public static void autoSwitchTool() {
+	private static void blockLadderClutch() {
+		// Try a block-ladder clutch
+		if (mc.player.getMainHandItem().is(Items.LADDER)){
+			// Do a ladder clutch
+			WinterBridge.LOGGER.debug("Holding ladder");
+			if (mc.hitResult.getType() == HitResult.Type.BLOCK) {
+				BlockHitResult blockHitResult = (BlockHitResult) mc.hitResult;
+				BlockPos ladderPos = blockHitResult.getBlockPos().relative(blockHitResult.getDirection()),
+						 playerPos = mc.player.getOnPos();
+				WinterBridge.LOGGER.debug("Possibly placing a ladder. ladder position X: {} Z: {}  player position X: {} Z: {}",
+						ladderPos.getX(), ladderPos.getZ(), playerPos.getX(), playerPos.getZ());
+				if (ladderPos.getX() == playerPos.getX() && ladderPos.getZ() == playerPos.getZ()){
+					if (ActionHandler.placeBlock())
+						WinterBridge.LOGGER.info("Ladder clutched");
+					else WinterBridge.LOGGER.info("Ladder clutch failed");
+				}
+			}
+		} else if (isBlock(mc.player.getMainHandItem())) {
+			// Place a block first, then switch to ladder (if has)
+			if (ActionHandler.placeBlock()){
+				int ticks = ModConfig.ladder_rotate_tick.get();
+				if (ticks > 0){
+					// Rotate down
+					Vec2 rot = mc.player.getRotationVector();
+					rot = new Vec2(89 + (float)(Math.random()) / 2, rot.y); // Look down
+					RotateHandler.init(rot, ticks);
+				}
+				switchToItem(Items.LADDER);
+			}
+		}
+	}
+
+	private static void autoSwitchTool() {
 		int slot = inv.selected;
 		if (mc.hitResult.getType() != HitResult.Type.BLOCK) {
 			if (isBlock(inv.getItem(slot))) {
@@ -729,7 +799,7 @@ public class ClientForgeHandler {
 		inv.selected = slot;
 	}
 
-	public static void autoE() {
+	private static void autoE() {
 		/*
 		 * Switch to tool or KB-stick.
 		 * Rule: if no KB-stick, switch to tool. Avoid holding block.
@@ -772,7 +842,7 @@ public class ClientForgeHandler {
 		// Every client tick
 		if (ModKeyBindings.INSTANCE.get("blocks").isDown()) {
 			if (spam_right_mode == 0) {
-				if (isBlock(inv.getSelected()) && inv.getSelected().getCount() > 1) {
+				if (isBlock(inv.getSelected()) && inv.getSelected().getCount() > 0) {
 					// Already holding block. Start spam-click
 					spam_right_mode = 2;
 				} else {
@@ -847,8 +917,6 @@ public class ClientForgeHandler {
 					chest.getMenu(),
 					inv,
 					chest.getTitle()));
-			// chest.keyPressed();
-			// if ()
 		}
 	}
 
@@ -867,6 +935,18 @@ public class ClientForgeHandler {
 	}
 
 	@SubscribeEvent
-	public static void onPlayerContainer(PlayerContainerEvent event) {
+	public static void onPlayerDie(LivingDeathEvent event) {
+		if (event.getEntity() == mc.player) {
+			WinterBridge.LOGGER.debug("Player dies");
+			CheatMode.changeRushingMode(0);
+		}
+	}
+
+	@SubscribeEvent
+	public static void onBlockBreak(BreakEvent event) {
+		if (event.getPlayer() == mc.player && mc.level.getBlockState(event.getPos()).is(Blocks.RED_BED)) {
+			WinterBridge.LOGGER.debug("Player breaks a bed");
+			CheatMode.changeRushingMode(0);
+		}
 	}
 }

@@ -15,8 +15,7 @@ public class ActionHandler {
     public static boolean placeBlock(BlockHitResult hit){
         // Given hitResult, perform using item and return whether succeeded
         Minecraft mc = Minecraft.getInstance();
-        if (!isBlock(mc.player.getInventory().getSelected()))
-            return false;
+        // if (!isBlock(mc.player.getInventory().getSelected())) return false;
         InteractionHand hand = InteractionHand.MAIN_HAND;
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hit);
         if (result.consumesAction()){

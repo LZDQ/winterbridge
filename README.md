@@ -145,7 +145,7 @@ Large latency: bow, water.
 
 #### Bug fixes:
 
-1. - [ ] Distinguish between TNT and blocks.
+1. - [x] Distinguish between TNT and blocks.
 2. - [ ] Disable some functions when just finished typing and mistyped the hotkey.
 3. - [x] Increase Ninja bridge pitch.
 
@@ -153,30 +153,29 @@ Large latency: bow, water.
 
 #### Specific functions of each key:
 
-|         | Normal         | Rushing                | Chest                 | Inventory                |
-| ------- | -------------- | ---------------------- | --------------------- | ------------------------ |
-| q       | ladder         | ladder                 | store money           | place money to inventory |
-| e       | tool, KB-stick | tool, KB-stick         | get money             | place money to hotbar    |
-| r       | fireball       | fireball               |                       |                          |
-| f       | inventory      | tnt                    | close                 | close                    |
-| x       | gapple         | gapple                 | set custom g          | set custom g             |
-| 1       | cancel         | cancel                 | unset custom g        | unset custom g           |
-| 2       | egg            | egg                    | swap with second slot | swap with second slot    |
-| 3       | potions        | potions                | swap with last slot   | swap with last slot      |
-| t       | drop money     | block in               |                       | drop money               |
-| g       | drop / custom  | hardest block / custom | drop                  | drop                     |
-| thumb   | pearl          | pearl                  |                       |                          |
-| extra   | bow            | bow                    |                       |                          |
-| alt     | change mode    | change mode            |                       |                          |
-| middle2 | freecam        | freecam                |                       |                          |
-| middle3 | tnt            |                        |                       |                          |
+|         | Normal                 | Rushing                | Chest                 | Inventory                |
+| ------- | ---------------------- | ---------------------- | --------------------- | ------------------------ |
+| q       | ladder / hardest block | ladder / hardest block | store money           | place money to inventory |
+| e       | tool, KB-stick         | tool, KB-stick         | get money             | place money to hotbar    |
+| r       | fireball               | fireball               |                       |                          |
+| f       | inventory              | tnt                    | close                 | close                    |
+| x       | gapple                 | gapple                 | set custom g          | set custom g             |
+| 1       | cancel                 | cancel                 | unset custom g        | unset custom g           |
+| 2       | egg                    | egg                    | swap with second slot | swap with second slot    |
+| 3       | potions                | potions                | swap with last slot   | swap with last slot      |
+| t       | drop money             | block in               |                       | drop money               |
+| g       | drop / custom          | hardest block / custom | drop                  | drop                     |
+| thumb   | pearl                  | pearl                  |                       |                          |
+| extra   | bow                    | bow                    |                       |                          |
+| middle2 | change mode            | change mode            |                       |                          |
+| middle3 | tnt                    |                        |                       |                          |
 
 
 
 ## TODO
 
-- [ ] Modify and add keys
+- [x] Modify and add keys
 - [ ] Optimize block-in initialization time
-- [ ] Bind double-click with block clutch
-- [ ] Block + ladder clutch (when falling and pressing space)
+- [x] Bind double-click (double-jump) with block clutch
+- [x] Block + ladder clutch (when falling and pressing space)
 - [ ] Fix bugs

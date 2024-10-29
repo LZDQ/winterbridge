@@ -43,13 +43,14 @@ public final class ModKeyBindings {
 		add("epearl", CATEGORY);
 		add("egg", CATEGORY);
 		add("gapple", CATEGORY, GLFW.GLFW_KEY_X);
-		add("ladder", CATEGORY);
+		add("ladder_or_def", CATEGORY);
 		add("bow", CATEGORY);
 		add("potions", CATEGORY);
 		add("func_e", CATEGORY);
 		add("custom", CATEGORY);
 		add("auto_login", CATEGORY);
 		add("auto_who", CATEGORY);
+		add("auto_send_inc", CATEGORY);
 		
 		// Below are only for normal mode
 		add("normal_tnt", CATEGORY_NORMAL);

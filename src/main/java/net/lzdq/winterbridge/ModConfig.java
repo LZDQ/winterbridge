@@ -29,10 +29,11 @@ public class ModConfig {
 	public static final ForgeConfigSpec.ConfigValue<List<Integer>> ninja_wait_tick;
 	public static final ForgeConfigSpec.ConfigValue<List<Double>> yaw_var, pitch_var;
 	public static final ForgeConfigSpec.ConfigValue<String> color_start_bridge, color_cancel_bridge, auto_login_command;
-	public static final ForgeConfigSpec.DoubleValue spam_left_min, spam_left_max, sort_delay;
+	public static final ForgeConfigSpec.DoubleValue spam_left_min, spam_left_max, sort_delay, timeout_doubleclick;
 	public static final ForgeConfigSpec.IntValue blockin_rotate_tick;
 	public static final ForgeConfigSpec.DoubleValue blockin_offset;
 	public static final ForgeConfigSpec.IntValue delay_sword;
+	public static final ForgeConfigSpec.IntValue ladder_rotate_tick;
 
 	static {
 		BUILDER.push("General Settings");
@@ -153,6 +154,10 @@ public class ModConfig {
 				.comment("Interval of sort, ms")
 				.defineInRange("sort_delay", 500.0, 0.0, 1000.0);
 
+		timeout_doubleclick = BUILDER
+				.comment("Timeout for a double click")
+				.defineInRange("timeout_doubleclick", 500.0, 0.0, 1000.0);
+
 		blockin_offset = BUILDER
 				.comment("Block-in block placement offset from center (doubled). 1.0 means random on whole face, 0.0 means only center of face")
 				.defineInRange("blockin_offset", 0.99, 0.0, 1.0);
@@ -164,6 +169,10 @@ public class ModConfig {
 		delay_sword = BUILDER
 				.comment("Delay after switching to sword, before spam-clicking, in ms")
 				.defineInRange("delay_sword", 100, 0, 200);
+
+		ladder_rotate_tick = BUILDER
+				.comment("Block + ladder clutch rotate ticks (after block, before ladder). 0 means disabling rotate")
+				.defineInRange("ladder_rotate_tick", 0, 0, 3);
 
 		BUILDER.pop();
 		CONFIG = BUILDER.build();
