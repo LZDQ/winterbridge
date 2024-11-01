@@ -179,3 +179,5 @@ Large latency: bow, water.
 - [x] Bind double-click (double-jump) with block clutch
 - [x] Block + ladder clutch (when falling and pressing space)
 - [ ] Fix bugs
+- [ ] Remove rushing mode and rearrange keys
+- [ ] Distinguish between mining and double-click when holding blocks
