@@ -178,6 +178,23 @@ Large latency: bow, water.
 - [ ] Optimize block-in initialization time
 - [x] Bind double-click (double-jump) with block clutch
 - [x] Block + ladder clutch (when falling and pressing space)
-- [ ] Fix bugs
 - [ ] Remove rushing mode and rearrange keys
-- [ ] Distinguish between mining and double-click when holding blocks
+- [ ] ~~Distinguish between mining and double-click when holding blocks~~
+- [ ] Auto tool switch to sword if holding block
+- [ ] Reduce packets sent when spam right click (if collide with player)
+
+
+
+## Resourcepack
+
+[Outlined + Connected Terracotta](https://www.planetminecraft.com/texture-pack/outlined-connected-terracotta/)
+
+[wool overlay 1.8.9 manually upgraded to 1.19.4](http://www.mediafire.com/file/bjplir0mtieakng/#3+Wool+Overlay.zip/file)
+
+[fullbright](https://www.curseforge.com/minecraft/texture-packs/fullbright)
+
+## Configs
+
+FOV: 100
+
+Mouse sensitivity: 120%
