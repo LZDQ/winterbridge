@@ -7,9 +7,8 @@ import net.minecraft.network.chat.Component;
 import java.util.Random;
 
 public class CheatMode {
-	public static int cheat_mode = 0, rushing_mode = 0;
-	private static final String[] cheat_mode_names = {"absolute", "relative", "slightly"},
-			rushing_mode_names = {"normal", "rushing"};
+	public static int cheat_mode = 0;
+	private static final String[] cheat_mode_names = {"absolute", "relative", "slightly"};
 	private static final Random rand = new Random();
 	/*
 	0 - Absolute cheat
@@ -38,12 +37,5 @@ public class CheatMode {
 	}
 	public static void changeCheatMode(){
 		changeCheatMode((cheat_mode + 1) % cheat_mode_names.length);
-	}
-	public static void changeRushingMode(int mode){
-		rushing_mode = mode;
-		Minecraft.getInstance().player.displayClientMessage(Component.literal(rushing_mode_names[rushing_mode]), true);
-	}
-	public static void changeRushingMode(){
-		changeRushingMode((rushing_mode + 1) % rushing_mode_names.length);
 	}
 }

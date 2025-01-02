@@ -35,6 +35,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.HitResult.Type;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
@@ -55,14 +56,15 @@ public class ClientForgeHandler {
 	static boolean is_sorting = false;
 	static boolean cancelled = false;
 	static boolean inventoryOpen = false, chestOpen = false;
-	static int spam_right_mode = 0; // 0 - Not down 1 - Down but not click 2 - Down and click
+	static boolean isDoubleAttack = false;
+	static int spam_left_mode = 1; // 0 - do not spam until hit entity (after switch)  1 - spam
+	static int spam_right_mode = 0; // 0 - Not down  1 - Down but not click  2 - Down and click
 	static long until = 0;
 	static AbstractBridgeHandler bridgeHandler;
 	static AbstractClutchHandler clutchHandler;
 	static BlockInHandler blockinHandler;
 	static DoubleClickHandler doubleClickHandler;
 	static List<Item> moneyItems = Arrays.asList(Items.EMERALD, Items.DIAMOND, Items.GOLD_INGOT, Items.IRON_INGOT);
-	static Item customItem;
 
 	@SubscribeEvent
 	public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -102,16 +104,16 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.get("ninja").consumeClick())
 				startBridge("ninja");
 
-			if (ModKeyBindings.INSTANCE.get("ninja_inc3").consumeClick())
-				startBridge("ninja_inc3");
+			// if (ModKeyBindings.INSTANCE.get("ninja_inc3").consumeClick())
+			// 	startBridge("ninja_inc3");
+			//
+			// if (ModKeyBindings.INSTANCE.get("ninja_diag").consumeClick())
+			// 	startBridge("ninja_diag");
 
-			if (ModKeyBindings.INSTANCE.get("ninja_diag").consumeClick())
-				startBridge("ninja_diag");
-
-			if (ModKeyBindings.INSTANCE.get("sort").consumeClick()) {
-				is_sorting = true;
-				cancelled = false;
-			}
+			// if (ModKeyBindings.INSTANCE.get("sort").consumeClick()) {
+			// 	is_sorting = true;
+			// 	cancelled = false;
+			// }
 
 			handleSpamClickRight();
 
@@ -123,24 +125,6 @@ public class ClientForgeHandler {
 
 			if (ModKeyBindings.INSTANCE.get("change_cheat_mode").consumeClick())
 				CheatMode.changeCheatMode();
-
-			if (ModKeyBindings.INSTANCE.get("change_rushing_mode").consumeClick()) {
-				CheatMode.changeRushingMode();
-				// Reset all conflicting keys
-				if (CheatMode.rushing_mode > 0) {
-					for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values())
-						if (key.getCategory().equals(ModKeyBindings.CATEGORY_RUSHING)) {
-							while (key.consumeClick())
-								;
-						}
-				} else {
-					for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values())
-						if (key.getCategory().equals(ModKeyBindings.CATEGORY_NORMAL)) {
-							while (key.consumeClick())
-								;
-						}
-				}
-			}
 
 			if (ModKeyBindings.INSTANCE.get("fireball").consumeClick())
 				switchToItem(Items.FIRE_CHARGE);
@@ -165,49 +149,17 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.get("potions").consumeClick())
 				switchBetweenPotions();
 
-			if (ModKeyBindings.INSTANCE.get("custom").consumeClick() && customItem != null) {
-				// revoke 'drop'
-				KeyMapping key = ModKeyBindings.INSTANCE.get("custom");
-				if (key.getKeyConflictContext().conflicts(mc.options.keyDrop.getKeyConflictContext()))
-					mc.options.keyDrop.consumeClick();
-				for (int i = 0; i < 9; i++) {
-					if (inv.getItem(i).is(customItem)) {
-						inv.selected = i;
-						break;
-					}
-				}
+			if (ModKeyBindings.INSTANCE.get("blockin").consumeClick()) {
+				cancelled = false;
+				if (blockinHandler == null)
+					blockinHandler = new BlockInHandler();
 			}
 
-			if (CheatMode.rushing_mode > 0) {
-				// Rushing mode.
-				if (ModKeyBindings.INSTANCE.get("rushing_tnt").consumeClick()) {
-					switchToItem(Items.TNT);
-					if (ModKeyBindings.INSTANCE.get("rushing_tnt").getKeyConflictContext().conflicts(
-							mc.options.keyInventory.getKeyConflictContext()))
-						mc.options.keyInventory.consumeClick();
-				}
+			if (ModKeyBindings.INSTANCE.get("drop_money").consumeClick())
+				normalDropMoney();
 
-				if (ModKeyBindings.INSTANCE.get("rushing_hardest_block").consumeClick()) {
-					if (ModKeyBindings.INSTANCE.get("rushing_hardest_block").getKeyConflictContext().conflicts(
-							mc.options.keyDrop.getKeyConflictContext()))
-						mc.options.keyDrop.consumeClick();
-					switchToHardestBlock();
-				}
-
-				if (ModKeyBindings.INSTANCE.get("rushing_blockin").consumeClick()) {
-					cancelled = false;
-					if (blockinHandler == null)
-						blockinHandler = new BlockInHandler();
-				}
-
-			} else {
-				// Normal mode
-				if (ModKeyBindings.INSTANCE.get("normal_drop_money").consumeClick())
-					normalDropMoney();
-
-				if (ModKeyBindings.INSTANCE.get("normal_tnt").consumeClick())
-					switchToItem(Items.TNT);
-			}
+			if (ModKeyBindings.INSTANCE.get("tnt").consumeClick())
+				switchToItem(Items.TNT);
 
 			if (ModKeyBindings.INSTANCE.get("func_e").consumeClick())
 				autoE();
@@ -243,6 +195,18 @@ public class ClientForgeHandler {
 				}
 			}
 
+			if (CheatMode.cheat_mode < 2 &&
+					mc.hitResult != null && mc.hitResult.getType() == Type.ENTITY &&
+					(mc.player.getInventory().selected == 0 ||
+					 mc.player.getInventory().getSelected().is(Items.STICK)) &&
+					mc.options.keyUse.consumeClick()){
+				// Holding sword or stick, pointing to an entity and right click (consume)
+				// Do a double click = click once and click later in another frame
+				KeyMapping.click(mc.options.keyAttack.getKey());
+				isDoubleAttack = true;
+				until = System.currentTimeMillis() + ModConfig.delay_double_attack.get();
+			}
+
 			if (CheatMode.cheat_mode < 2 && mc.options.keyJump.isDown() && mc.player.fallDistance > 4)
 				blockLadderClutch();
 			
@@ -259,12 +223,6 @@ public class ClientForgeHandler {
 
 			if (ModKeyBindings.INSTANCE.get("last_slot").consumeClick())
 				swapMenuSlot(8);
-
-			if (ModKeyBindings.INSTANCE.get("set_custom").consumeClick())
-				setCustomItem();
-
-			if (ModKeyBindings.INSTANCE.get("unset_custom").consumeClick())
-				customItem = null;
 
 			// Handle the chest keys
 			if (chestOpen) {
@@ -285,7 +243,7 @@ public class ClientForgeHandler {
 					WinterBridge.LOGGER.error("inventoryOpen, containerMenu is {}",
 							mc.player.containerMenu.containerId);
 				} else {
-					if (ModKeyBindings.INSTANCE.get("normal_drop_money").consumeClick()) {
+					if (ModKeyBindings.INSTANCE.get("drop_money").consumeClick()) {
 						inventoryDropMoney();
 					}
 				}
@@ -294,6 +252,7 @@ public class ClientForgeHandler {
 
 		if (System.currentTimeMillis() < until)
 			return;
+		handleSpamClickLeft(); // To check whether is switching
 
 		if (is_sorting && !cancelled)
 			sortItems();
@@ -327,7 +286,7 @@ public class ClientForgeHandler {
 				doubleClickHandler = null;
 			else doubleClickHandler.tick();
 		}
-
+		
 		RotateHandler.tick();
 	}
 
@@ -472,7 +431,14 @@ public class ClientForgeHandler {
 	public static void onRenderTick(TickEvent.RenderTickEvent event) {
 		if (event.phase == TickEvent.Phase.END)
 			return;
+		if (System.currentTimeMillis() < until)
+			return;
 		handleSpamClickLeft();
+		if (isDoubleAttack){
+			// mc.player.displayClientMessage(Component.literal("double attack"), true);
+			KeyMapping.click(mc.options.keyAttack.getKey());
+			isDoubleAttack = false;
+		}
 	}
 
 	private static boolean doSwap(int slot, int dest) {
@@ -738,16 +704,6 @@ public class ClientForgeHandler {
 					mc.player);
 	}
 
-	private static void setCustomItem() {
-		if (inventoryOpen) {
-			Slot slot = ((InventoryScreen) mc.screen).getSlotUnderMouse();
-			customItem = slot.getItem().getItem();
-		} else if (chestOpen) {
-			Slot slot = ((ContainerScreen) mc.screen).getSlotUnderMouse();
-			customItem = slot.getItem().getItem();
-		}
-	}
-
 	private static void blockLadderClutch() {
 		// Try a block-ladder clutch
 		if (mc.player.getMainHandItem().is(Items.LADDER)){
@@ -779,16 +735,14 @@ public class ClientForgeHandler {
 			}
 		}
 	}
-
+	
 	private static void autoSwitchTool() {
-		int slot = inv.selected;
+		int slot = inv.getFreeSlot(); // empty slot or sword
+		if (slot == -1 || !Inventory.isHotbarSlot(slot))
+			slot = 0;
 		if (mc.hitResult.getType() != HitResult.Type.BLOCK) {
-			if (isBlock(inv.getItem(slot))) {
-				slot = inv.getFreeSlot();
-				if (slot == -1 || !Inventory.isHotbarSlot(slot))
-					slot = 0;
+			if (isBlock(inv.getSelected()))
 				inv.selected = slot;
-			}
 			return;
 		}
 		BlockHitResult hit = (BlockHitResult) mc.hitResult;
@@ -823,19 +777,30 @@ public class ClientForgeHandler {
 	}
 
 	private static void handleSpamClickLeft() {
-		if (System.currentTimeMillis() < until)
-			return;
+		// Spam-click when holding switching to sword
 		if (mc.options.keyHotbarSlots[ModConfig.slot_sword.get()].isDown()) {
 			if (mc.player.getInventory().selected != ModConfig.slot_sword.get()) {
 				until = System.currentTimeMillis() + ModConfig.delay_sword.get();
+				spam_left_mode = 0; // do not spam until hit entity or next hold
 				return;
 			}
-			// Spam-click when holding switching to sword
-			KeyMapping.click(mc.options.keyAttack.getKey());
-			until = (long) (System.currentTimeMillis() +
-					ModConfig.spam_left_min.get() +
-					Math.random() * (ModConfig.spam_left_max.get() - ModConfig.spam_left_min.get()));
-		}
+			if (spam_left_mode == 0) {
+				if (mc.hitResult.getType() == Type.ENTITY)
+					spam_left_mode = 1;
+				else return;
+			}
+			if (mc.hitResult.getType() == Type.ENTITY ||
+					Math.random() < ModConfig.spam_miss_click_prob.get()){
+				// Hit or do hit
+				KeyMapping.click(mc.options.keyAttack.getKey());
+				until = (long) (System.currentTimeMillis() +
+						ModConfig.spam_left_min.get() +
+						Math.random() * (ModConfig.spam_left_max.get() - ModConfig.spam_left_min.get()));
+			} else {
+				// Miss, minimal delay
+				until = System.currentTimeMillis() + ModConfig.spam_left_min.get();
+			}
+		} else spam_left_mode = 1;
 	}
 
 	private static void handleSpamClickRight() {
@@ -938,15 +903,6 @@ public class ClientForgeHandler {
 	public static void onPlayerDie(LivingDeathEvent event) {
 		if (event.getEntity() == mc.player) {
 			WinterBridge.LOGGER.debug("Player dies");
-			CheatMode.changeRushingMode(0);
-		}
-	}
-
-	@SubscribeEvent
-	public static void onBlockBreak(BreakEvent event) {
-		if (event.getPlayer() == mc.player && mc.level.getBlockState(event.getPos()).is(Blocks.RED_BED)) {
-			WinterBridge.LOGGER.debug("Player breaks a bed");
-			CheatMode.changeRushingMode(0);
 		}
 	}
 }

@@ -149,26 +149,26 @@ Large latency: bow, water.
 2. - [ ] Disable some functions when just finished typing and mistyped the hotkey.
 3. - [x] Increase Ninja bridge pitch.
 
-   
+4. - [ ] When jump potion, disable auto block and ladder clutch
 
 #### Specific functions of each key:
 
-|         | Normal                 | Rushing                | Chest                 | Inventory                |
-| ------- | ---------------------- | ---------------------- | --------------------- | ------------------------ |
-| q       | ladder / hardest block | ladder / hardest block | store money           | place money to inventory |
-| e       | tool, KB-stick         | tool, KB-stick         | get money             | place money to hotbar    |
-| r       | fireball               | fireball               |                       |                          |
-| f       | inventory              | tnt                    | close                 | close                    |
-| x       | gapple                 | gapple                 | set custom g          | set custom g             |
-| 1       | cancel                 | cancel                 | unset custom g        | unset custom g           |
-| 2       | egg                    | egg                    | swap with second slot | swap with second slot    |
-| 3       | potions                | potions                | swap with last slot   | swap with last slot      |
-| t       | drop money             | block in               |                       | drop money               |
-| g       | drop / custom          | hardest block / custom | drop                  | drop                     |
-| thumb   | pearl                  | pearl                  |                       |                          |
-| extra   | bow                    | bow                    |                       |                          |
-| middle2 | change mode            | change mode            |                       |                          |
-| middle3 | tnt                    |                        |                       |                          |
+|         | Normal                 | Chest                 | Inventory                |
+| ------- | ---------------------- | --------------------- | ------------------------ |
+| q       | ladder / hardest block | store money           | place money to inventory |
+| e       | tool, KB-stick         | get money             | place money to hotbar    |
+| r       | fireball               |                       |                          |
+| f       | inventory              |                       |                          |
+| x       | gapple                 |                       |                          |
+| 1       | cancel                 |                       |                          |
+| 2       | egg                    | swap with second slot | swap with second slot    |
+| 3       | potions                | swap with last slot   | swap with last slot      |
+| t       | drop money             |                       | drop money               |
+| b       | block in               |                       |                          |
+| thumb   | pearl                  |                       |                          |
+| extra   | tnt                    |                       |                          |
+| middle2 | reserved               |                       |                          |
+| middle3 | reserved               |                       |                          |
 
 
 
@@ -178,10 +178,14 @@ Large latency: bow, water.
 - [ ] Optimize block-in initialization time
 - [x] Bind double-click (double-jump) with block clutch
 - [x] Block + ladder clutch (when falling and pressing space)
-- [ ] Remove rushing mode and rearrange keys
+- [x] Remove rushing mode and rearrange keys
 - [ ] ~~Distinguish between mining and double-click when holding blocks~~
-- [ ] Auto tool switch to sword if holding block
+- [x] Auto tool switch to empty or sword if holding block
 - [ ] Reduce packets sent when spam right click (if collide with player)
+- [x] Sword/stick right click = left click + left click in next frame (if hitObject is entity)
+- [x] Sword left spam only start spam if hitObject is entity (only when switching)
+- [x] Sword left spam if hitObject is not player, do not click with a probability
+- [ ] Optimize store money
 
 
 
@@ -197,4 +201,4 @@ Large latency: bow, water.
 
 FOV: 100
 
-Mouse sensitivity: 120%
+Mouse sensitivity: 90%

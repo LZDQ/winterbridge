@@ -29,10 +29,11 @@ public class ModConfig {
 	public static final ForgeConfigSpec.ConfigValue<List<Integer>> ninja_wait_tick;
 	public static final ForgeConfigSpec.ConfigValue<List<Double>> yaw_var, pitch_var;
 	public static final ForgeConfigSpec.ConfigValue<String> color_start_bridge, color_cancel_bridge, auto_login_command;
-	public static final ForgeConfigSpec.DoubleValue spam_left_min, spam_left_max, sort_delay, timeout_doubleclick;
+	public static final ForgeConfigSpec.IntValue spam_left_min, spam_left_max, sort_delay, timeout_doubleclick;
 	public static final ForgeConfigSpec.IntValue blockin_rotate_tick;
 	public static final ForgeConfigSpec.DoubleValue blockin_offset;
-	public static final ForgeConfigSpec.IntValue delay_sword;
+	public static final ForgeConfigSpec.IntValue delay_sword, delay_double_attack;
+	public static final ForgeConfigSpec.DoubleValue spam_miss_click_prob;
 	public static final ForgeConfigSpec.IntValue ladder_rotate_tick;
 
 	static {
@@ -144,19 +145,19 @@ public class ModConfig {
 
 		spam_left_min = BUILDER
 				.comment("Spam left min interval, ms")
-				.defineInRange("spam_left_min", 35.0, 1.0, 1000.0);
+				.defineInRange("spam_left_min", 35, 1, 1000);
 
 		spam_left_max = BUILDER
 				.comment("Spam left max interval, ms")
-				.defineInRange("spam_left_max", 50.0, 1.0, 1000.0);
+				.defineInRange("spam_left_max", 50, 1, 1000);
 
 		sort_delay = BUILDER
 				.comment("Interval of sort, ms")
-				.defineInRange("sort_delay", 500.0, 0.0, 1000.0);
+				.defineInRange("sort_delay", 500, 0, 1000);
 
 		timeout_doubleclick = BUILDER
 				.comment("Timeout for a double click")
-				.defineInRange("timeout_doubleclick", 500.0, 0.0, 1000.0);
+				.defineInRange("timeout_doubleclick", 500, 0, 1000);
 
 		blockin_offset = BUILDER
 				.comment("Block-in block placement offset from center (doubled). 1.0 means random on whole face, 0.0 means only center of face")
@@ -170,6 +171,14 @@ public class ModConfig {
 				.comment("Delay after switching to sword, before spam-clicking, in ms")
 				.defineInRange("delay_sword", 100, 0, 200);
 
+		delay_double_attack = BUILDER
+				.comment("Delay between the two attacks, in ms")
+				.defineInRange("delay_double_attack", 30, 0, 200);
+		
+		spam_miss_click_prob = BUILDER
+				.comment("Probability of still left click if hitResult is not entity")
+				.defineInRange("spam_miss_click_prob", 0.3, 0.0, 1.0);
+		
 		ladder_rotate_tick = BUILDER
 				.comment("Block + ladder clutch rotate ticks (after block, before ladder). 0 means disabling rotate")
 				.defineInRange("ladder_rotate_tick", 0, 0, 3);
