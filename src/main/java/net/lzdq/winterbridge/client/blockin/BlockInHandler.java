@@ -19,7 +19,14 @@ public class BlockInHandler {
 	Minecraft mc;
 	List<BlockPos> to_be_place;
 	boolean rotating, finished;
+	// Time Profiling
+	private final long creationTime;
+	private long blockStartTime;
+	private final List<Double> timings;
+
 	public BlockInHandler() {
+		this.creationTime = System.nanoTime();
+		this.timings = new ArrayList<>();
 		mc = Minecraft.getInstance();
 		BlockPos pos = mc.player.blockPosition();
 		to_be_place = new ArrayList<>();
@@ -47,9 +54,21 @@ public class BlockInHandler {
 			} else return;
 		}
 		if (to_be_place.isEmpty()){
+			if (false) {
+				// Print time profiling
+				long totalEndTime = System.nanoTime();
+				double totalDurationSeconds = (totalEndTime - this.creationTime) / 1_000_000_000.0;
+
+				mc.player.displayClientMessage(Component.literal("--- Block-in Timings ---"), false);
+				for (int i = 0; i < this.timings.size(); i++) {
+					mc.player.displayClientMessage(Component.literal(String.format("Block %d: %.6f seconds", i + 1, this.timings.get(i))), false);
+				}
+				mc.player.displayClientMessage(Component.literal(String.format("Total time: %.6f seconds", totalDurationSeconds)), false);
+				mc.player.displayClientMessage(Component.literal("------------------------"), false);
+			}
 			mc.player.displayClientMessage(
 					Component.literal("Block-in successful!")
-							.withStyle(Style.EMPTY.withColor(ModConfig.getColorStartBridge())),
+							.withStyle(Style.EMPTY.withColor(0x00FF80)),
 					true
 			);
 			finished = true;
@@ -58,15 +77,22 @@ public class BlockInHandler {
 		if (!isBlock(mc.player.getInventory().getSelected())){
 			mc.player.displayClientMessage(
 					Component.literal("Block-in failed: NOT HOLDING BLOCKS")
-							.withStyle(Style.EMPTY.withColor(ModConfig.getColorCancelBridge())),
+							.withStyle(Style.EMPTY.withColor(0xFF0000)),
 					true
 			);
 			finished = true;
 			return ;
 		}
+
+		this.blockStartTime = System.nanoTime();
 		BlockPos pos = to_be_place.remove(0);
-		if (!mc.level.getBlockState(pos).isAir())
+
+		if (!mc.level.getBlockState(pos).isAir()) {
+			long blockEndTime = System.nanoTime();
+			this.timings.add((blockEndTime - this.blockStartTime) / 1_000_000_000.0);
 			return ;
+		}
+
 		Vec3 eye = mc.player.getEyePosition();
 		boolean ok = false;
 		Vec3 p = null;
@@ -106,6 +132,10 @@ public class BlockInHandler {
 			}
 			if (ok) break;
 		}
+
+		long blockEndTime = System.nanoTime();
+		this.timings.add((blockEndTime - this.blockStartTime) / 1_000_000_000.0);
+
 		if (ok) {
 			//mc.player.displayClientMessage(Component.literal("ok"), false);
 			Vec3 dir_vec = p.subtract(eye).normalize();

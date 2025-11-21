@@ -53,7 +53,6 @@ import java.util.Arrays;
 public class ClientForgeHandler {
 	static Minecraft mc;
 	static Inventory inv;
-	static boolean is_sorting = false;
 	static boolean cancelled = false;
 	static boolean inventoryOpen = false, chestOpen = false;
 	static boolean isDoubleAttack = false;
@@ -65,6 +64,7 @@ public class ClientForgeHandler {
 	static BlockInHandler blockinHandler;
 	static DoubleClickHandler doubleClickHandler;
 	static List<Item> moneyItems = Arrays.asList(Items.EMERALD, Items.DIAMOND, Items.GOLD_INGOT, Items.IRON_INGOT);
+	static boolean last_inc = false; // avoid sending duplicate messages
 
 	@SubscribeEvent
 	public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -75,7 +75,6 @@ public class ClientForgeHandler {
 		if (PacketInspector.connected != PacketInspector.modified) {
 			PacketInspector.modified = PacketInspector.connected;
 			if (PacketInspector.connected) {
-				is_sorting = false;
 				spam_right_mode = 0;
 				bridgeHandler = null;
 				clutchHandler = null;
@@ -119,7 +118,6 @@ public class ClientForgeHandler {
 
 			if (ModKeyBindings.INSTANCE.get("cancel").consumeClick()) {
 				cancelled = true;
-				is_sorting = false;
 				RotateHandler.setCancelled();
 			}
 
@@ -161,6 +159,9 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.get("tnt").consumeClick())
 				switchToItem(Items.TNT);
 
+			if (ModKeyBindings.INSTANCE.get("ice_bridge").consumeClick())
+				switchToItem(Items.ICE);
+
 			if (ModKeyBindings.INSTANCE.get("func_e").consumeClick())
 				autoE();
 
@@ -170,8 +171,12 @@ public class ClientForgeHandler {
 			if (ModKeyBindings.INSTANCE.get("auto_who").consumeClick())
 				mc.player.connection.sendCommand("who");
 
-			if (ModKeyBindings.INSTANCE.get("auto_send_inc").consumeClick())
-				mc.player.connection.sendChat("inc");
+			if (ModKeyBindings.INSTANCE.get("auto_send_inc").consumeClick()) {
+				if (last_inc ^= true)
+					mc.player.connection.sendChat("inc");
+				else
+					mc.player.connection.sendChat("incc");
+			}
 
 			if (CheatMode.cheat_mode < 2 &&
 					isBlock(mc.player.getMainHandItem()) &&
@@ -253,9 +258,6 @@ public class ClientForgeHandler {
 		if (System.currentTimeMillis() < until)
 			return;
 		handleSpamClickLeft(); // To check whether is switching
-
-		if (is_sorting && !cancelled)
-			sortItems();
 
 		if (bridgeHandler != null) {
 			bridgeHandler.tick();
@@ -406,7 +408,7 @@ public class ClientForgeHandler {
 					return;
 				}
 	}
-	
+
 	private static void switchToHardestBlock(){
 		String[] blocks = {
 			"Obsidian",
@@ -426,7 +428,7 @@ public class ClientForgeHandler {
 			}
 		}
 	}
-	
+
 	@SubscribeEvent
 	public static void onRenderTick(TickEvent.RenderTickEvent event) {
 		if (event.phase == TickEvent.Phase.END)
@@ -439,224 +441,6 @@ public class ClientForgeHandler {
 			KeyMapping.click(mc.options.keyAttack.getKey());
 			isDoubleAttack = false;
 		}
-	}
-
-	private static boolean doSwap(int slot, int dest) {
-		if (slot == -1 || slot == dest + InventoryMenu.USE_ROW_SLOT_START)
-			return false;
-		swapSlot(slot, dest);
-		until = (long) (System.currentTimeMillis() + ModConfig.sort_delay.get() * (Math.random() * 0.3 + 0.7));
-		return true;
-	}
-
-	private static void sortItems() {
-		Minecraft mc = Minecraft.getInstance();
-		InventoryMenu inv_menu = mc.player.inventoryMenu;
-		List<ItemStack> items = inv_menu.getItems();
-
-		int slot;
-		// Sword
-		if (ModConfig.slot_sword.get() != -1) {
-			Item[] sword_items = {
-					Items.DIAMOND_SWORD,
-					Items.IRON_SWORD,
-					Items.STONE_SWORD,
-					Items.WOODEN_SWORD
-			};
-			slot = -1;
-			for (Item sword : sword_items) {
-				for (int i = 0; i < items.size(); i++)
-					if (items.get(i).is(sword)) {
-						slot = i;
-						break;
-					}
-				if (slot != -1)
-					break;
-			}
-			// slot will be [0, items.size()) if it exists and -1 otherwise
-			if (doSwap(slot, ModConfig.slot_sword.get()))
-				return;
-		}
-
-		// Block
-		if (ModConfig.slot_block.get() != -1) {
-			int max_count = mc.player.getInventory().getSelected().getCount();
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack itemstack = items.get(i);
-				if (isBlock(itemstack) && itemstack.getCount() > max_count) {
-					slot = i;
-					max_count = itemstack.getCount();
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_block.get()))
-				return;
-		}
-
-		// Shear
-		if (ModConfig.slot_shear.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.SHEARS)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_shear.get()))
-				return;
-		}
-
-		// Pickaxe
-		if (ModConfig.slot_pickaxe.get() != -1) {
-			Item[] pickaxe_items = {
-					Items.DIAMOND_PICKAXE,
-					Items.GOLDEN_PICKAXE,
-					Items.IRON_PICKAXE,
-					Items.WOODEN_PICKAXE
-			};
-			slot = -1;
-			for (Item pickaxe : pickaxe_items) {
-				for (int i = 0; i < items.size(); i++) {
-					ItemStack item = items.get(i);
-					if (item.is(pickaxe)) {
-						slot = i;
-						break;
-					}
-				}
-				if (slot != -1)
-					break;
-			}
-			if (doSwap(slot, ModConfig.slot_pickaxe.get()))
-				return;
-		}
-
-		// Axe
-		if (ModConfig.slot_axe.get() != -1) {
-			Item[] axe_items = {
-					Items.DIAMOND_AXE,
-					Items.IRON_AXE,
-					Items.STONE_AXE,
-					Items.WOODEN_AXE
-			};
-			slot = -1;
-			for (Item axe : axe_items) {
-				for (int i = 0; i < items.size(); i++) {
-					ItemStack item = items.get(i);
-					if (item.is(axe)) {
-						slot = i;
-						break;
-					}
-				}
-				if (slot != -1)
-					break;
-			}
-			if (doSwap(slot, ModConfig.slot_axe.get()))
-				return;
-		}
-
-		// Gapple
-		if (ModConfig.slot_gapple.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.GOLDEN_APPLE)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_gapple.get()))
-				return;
-		}
-
-		// Fireball
-		if (ModConfig.slot_fireball.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.FIRE_CHARGE)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_fireball.get()))
-				return;
-		}
-
-		// TNT
-		if (ModConfig.slot_tnt.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.TNT)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_tnt.get()))
-				return;
-		}
-
-		// Ladder
-		if (ModConfig.slot_ladder.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.LADDER)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_ladder.get()))
-				return;
-		}
-
-		// Knock-back stick
-		if (ModConfig.slot_kbstick.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.STICK)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_kbstick.get()))
-				return;
-		}
-
-		// Bridge egg
-		if (ModConfig.slot_egg.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.EGG)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_egg.get()))
-				return;
-		}
-
-		// Pop-up tower
-		if (ModConfig.slot_tower.get() != -1) {
-			slot = -1;
-			for (int i = 0; i < items.size(); i++) {
-				ItemStack item = items.get(i);
-				if (item.is(Items.CHEST)) {
-					slot = i;
-					break;
-				}
-			}
-			if (doSwap(slot, ModConfig.slot_tower.get()))
-				return;
-		}
-
-		mc.player.closeContainer();
-		mc.player.displayClientMessage(Component.literal("Sorted"), true);
-
-		is_sorting = false;
 	}
 
 	private static void swapSlot(int slot_from, int slot_to) {
@@ -778,8 +562,8 @@ public class ClientForgeHandler {
 
 	private static void handleSpamClickLeft() {
 		// Spam-click when holding switching to sword
-		if (mc.options.keyHotbarSlots[ModConfig.slot_sword.get()].isDown()) {
-			if (mc.player.getInventory().selected != ModConfig.slot_sword.get()) {
+		if (mc.options.keyHotbarSlots[0].isDown()) {
+			if (mc.player.getInventory().selected != 0) {
 				until = System.currentTimeMillis() + ModConfig.delay_sword.get();
 				spam_left_mode = 0; // do not spam until hit entity or next hold
 				return;
@@ -834,7 +618,7 @@ public class ClientForgeHandler {
 	private static void startBridge(String method) {
 		mc.player.displayClientMessage(
 				Component.literal("Start bridge: " + method)
-						.withStyle(Style.EMPTY.withColor(ModConfig.getColorStartBridge())),
+						.withStyle(Style.EMPTY.withColor(0x00FF80)),
 				true);
 		cancelled = false;
 		if (bridgeHandler == null) {

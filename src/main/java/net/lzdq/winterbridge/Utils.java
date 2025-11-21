@@ -7,12 +7,13 @@ import net.minecraft.world.item.Items;
 
 public final class Utils {
 	public static boolean isBlock(Item item) {
-		// Check whether the item is block EXCLUDE TNT
-		return (item instanceof BlockItem && !item.equals(Items.TNT)) &&
-			!item.equals(Items.CHEST) && !item.equals(Items.LADDER);
+		// Check whether the item is block EXCLUDE TNT and some other items
+		return item instanceof BlockItem && !item.equals(Items.TNT) &&
+			!item.equals(Items.CHEST) && !item.equals(Items.LADDER) &&
+			!item.equals(Items.ICE);
 	}
 	public static boolean isBlock(ItemStack item) {
-		// Check whether the item is block EXCLUDE TNT
+		// Check whether the item is block EXCLUDE TNT and some other items
 		return isBlock(item.getItem());
 	}
 }

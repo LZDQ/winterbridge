@@ -27,7 +27,7 @@ displayName="LZDQ's bedwars assistant" #mandatory
 # A URL for the "homepage" for this mod, displayed in the mod UI
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-logoFile="examplemod.png" #optional
+# logoFile="winterbridge.png" #optional
 # A text field displayed in the mod UI
 #credits="Thanks for this example mod goes to Java" #optional
 # A text field displayed in the mod UI
@@ -57,6 +57,7 @@ Go to https://github.com/LZDQ/winterbridge/ for details.
     ordering="NONE"
     # Side this dependency is applied on - BOTH, CLIENT or SERVER
     side="CLIENT"
+
 # Here's another dependency
 [[dependencies.winterbridge]]
     modId="minecraft"
@@ -65,3 +66,16 @@ Go to https://github.com/LZDQ/winterbridge/ for details.
     versionRange="[1.19,1.20)"
     ordering="NONE"
     side="CLIENT"
+
+[[dependencies.winterbridge]]
+    modId="configured"
+    mandatory=true
+    versionRange="[2.1.1,)" # Replace with the appropriate version range
+    ordering="NONE"
+    side="CLIENT"
+
+[[extensions.winterbridge]]
+    # The 'configScreenFactory' property tells Forge what class to use to create the config screen.
+    # 'CONFIGURED' is a special shortcut provided by Forge itself that tells it to look for
+    # a provider registered by a library like Configured.
+    configScreenFactory = "CONFIGURED"

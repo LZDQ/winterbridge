@@ -7,9 +7,7 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -20,16 +18,14 @@ import java.util.List;
 public class ModConfig {
 	private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 	public static final ForgeConfigSpec CONFIG;
-	public static final ForgeConfigSpec.IntValue slot_sword, slot_block, slot_shear, slot_pickaxe, slot_axe,
-			slot_gapple, slot_fireball, slot_tnt, slot_ladder, slot_kbstick, slot_egg, slot_tower,
-			cheat_mode;
+	public static final ForgeConfigSpec.IntValue cheat_mode;
 	public static final ForgeConfigSpec.DoubleValue ninja_side_dist, ninja_pitch, ninja_walk_dist;
 	public static final ForgeConfigSpec.DoubleValue ninja_diag_pitch, ninja_diag_walk_dist;
 	public static final ForgeConfigSpec.DoubleValue god_pitch, god_walk_dist;
 	public static final ForgeConfigSpec.ConfigValue<List<Integer>> ninja_wait_tick;
 	public static final ForgeConfigSpec.ConfigValue<List<Double>> yaw_var, pitch_var;
-	public static final ForgeConfigSpec.ConfigValue<String> color_start_bridge, color_cancel_bridge, auto_login_command;
-	public static final ForgeConfigSpec.IntValue spam_left_min, spam_left_max, sort_delay, timeout_doubleclick;
+	public static final ForgeConfigSpec.ConfigValue<String> auto_login_command;
+	public static final ForgeConfigSpec.IntValue spam_left_min, spam_left_max, timeout_doubleclick;
 	public static final ForgeConfigSpec.IntValue blockin_rotate_tick;
 	public static final ForgeConfigSpec.DoubleValue blockin_offset;
 	public static final ForgeConfigSpec.IntValue delay_sword, delay_double_attack;
@@ -37,55 +33,7 @@ public class ModConfig {
 	public static final ForgeConfigSpec.IntValue ladder_rotate_tick;
 
 	static {
-		BUILDER.push("General Settings");
-
-		slot_sword = BUILDER
-				.comment("Slot to place sword")
-				.defineInRange("slot_sword", 0, -1, 8);
-
-		slot_block = BUILDER
-				.comment("Slot to place blocks")
-				.defineInRange("slot_block", 4, -1, 8);
-
-		slot_shear = BUILDER
-				.comment("Slot to place shear")
-				.defineInRange("slot_shear", 2, -1, 8);
-
-		slot_pickaxe = BUILDER
-				.comment("Slot to place pickaxe")
-				.defineInRange("slot_pickaxe", 1, -1, 8);
-
-		slot_axe = BUILDER
-				.comment("Slot to place axe")
-				.defineInRange("slot_axe", 3, -1, 8);
-
-		slot_gapple = BUILDER
-				.comment("Slot to place golden apple")
-				.defineInRange("slot_gapple", 8, -1, 8);
-
-		slot_fireball = BUILDER
-				.comment("Slot to place fireball")
-				.defineInRange("slot_fireball", 5, -1, 8);
-
-		slot_tnt = BUILDER
-				.comment("Slot to place tnt")
-				.defineInRange("slot_tnt", -1, -1, 8);
-
-		slot_ladder = BUILDER
-				.comment("Slot to place ladder")
-				.defineInRange("slot_ladder", -1, -1, 8);
-
-		slot_kbstick = BUILDER
-				.comment("Slot to place knock-back stick")
-				.defineInRange("slot_kbstick", -1, -1, 8);
-
-		slot_egg = BUILDER
-				.comment("Slot to place bridge egg")
-				.defineInRange("slot_egg", -1, -1, 8);
-
-		slot_tower = BUILDER
-				.comment("Slot to place pop-up tower")
-				.defineInRange("slot_tower", -1, -1, 8);
+		BUILDER.push("Bridge Settings");
 
 		ninja_side_dist = BUILDER
 				.comment("Ninja and god bridge's side distance from block center")
@@ -127,21 +75,9 @@ public class ModConfig {
 				.comment("God bridge's walk distance from base block's center")
 				.defineInRange("god_walk_dist", 0.5, -0.5, 1.0);
 
-		color_start_bridge = BUILDER
-				.comment("Hex color value for starting bridge prompt. Default: green")
-				.define("color_start_bridge", "#00FF80");
+		BUILDER.pop();
 
-		color_cancel_bridge = BUILDER
-				.comment("Hex color value for canceling bridge prompt. Default: red")
-				.define("color_cancel_bridge", "#FF0000");
-
-		auto_login_command = BUILDER
-				.comment("Auto login command, usually /login password (DO NOT include the slash)")
-				.define("auto_login_command", "login password");
-
-		cheat_mode = BUILDER
-				.comment("Default cheat mode. 0: absolute  1: relative	2: slightly")
-				.defineInRange("cheat_mode", 0, 0, 2);
+		BUILDER.push("PVP Settings");
 
 		spam_left_min = BUILDER
 				.comment("Spam left min interval, ms")
@@ -151,13 +87,25 @@ public class ModConfig {
 				.comment("Spam left max interval, ms")
 				.defineInRange("spam_left_max", 50, 1, 1000);
 
-		sort_delay = BUILDER
-				.comment("Interval of sort, ms")
-				.defineInRange("sort_delay", 500, 0, 1000);
+		delay_sword = BUILDER
+				.comment("Delay after switching to sword, before spam-clicking, in ms")
+				.defineInRange("delay_sword", 100, 0, 200);
 
 		timeout_doubleclick = BUILDER
 				.comment("Timeout for a double click")
 				.defineInRange("timeout_doubleclick", 500, 0, 1000);
+
+		delay_double_attack = BUILDER
+				.comment("Delay between the two attacks, in ms")
+				.defineInRange("delay_double_attack", 30, 0, 200);
+
+		spam_miss_click_prob = BUILDER
+				.comment("Probability of still left click if hitResult is not entity")
+				.defineInRange("spam_miss_click_prob", 0.9, 0.0, 1.0);
+
+		BUILDER.pop();
+
+		BUILDER.push("Other Settings");
 
 		blockin_offset = BUILDER
 				.comment("Block-in block placement offset from center (doubled). 1.0 means random on whole face, 0.0 means only center of face")
@@ -167,23 +115,20 @@ public class ModConfig {
 				.comment("Block-in ticks for rotating")
 				.defineInRange("blockin_rotate_tick", 2, 1, 20);
 
-		delay_sword = BUILDER
-				.comment("Delay after switching to sword, before spam-clicking, in ms")
-				.defineInRange("delay_sword", 100, 0, 200);
-
-		delay_double_attack = BUILDER
-				.comment("Delay between the two attacks, in ms")
-				.defineInRange("delay_double_attack", 30, 0, 200);
-		
-		spam_miss_click_prob = BUILDER
-				.comment("Probability of still left click if hitResult is not entity")
-				.defineInRange("spam_miss_click_prob", 0.3, 0.0, 1.0);
-		
 		ladder_rotate_tick = BUILDER
 				.comment("Block + ladder clutch rotate ticks (after block, before ladder). 0 means disabling rotate")
 				.defineInRange("ladder_rotate_tick", 0, 0, 3);
 
+		auto_login_command = BUILDER
+				.comment("Auto login command, usually /login password (DO NOT include the slash)")
+				.define("auto_login_command", "login password");
+
+		cheat_mode = BUILDER
+				.comment("Default cheat mode. 0: absolute  1: relative	2: slightly")
+				.defineInRange("cheat_mode", 0, 0, 2);
+
 		BUILDER.pop();
+
 		CONFIG = BUILDER.build();
 	}
 
@@ -198,25 +143,13 @@ public class ModConfig {
 		config.setConfig(fileConfig);
 	}
 
-	@SubscribeEvent
-	public static void onLoad(final FMLLoadCompleteEvent event) {
-		loadConfig(CONFIG, FMLPaths.CONFIGDIR.get().resolve("winterbridge-config.toml"));
-	}
+	// @SubscribeEvent
+	// public static void onLoad(final FMLLoadCompleteEvent event) {
+	// 	loadConfig(CONFIG, FMLPaths.CONFIGDIR.get().resolve("winterbridge-config.toml"));
+	// }
 
-	@SubscribeEvent
-	public static void onCommonSetup(final FMLCommonSetupEvent event) {
-		FMLJavaModLoadingContext.get().getModEventBus().register(ModConfig.class);
-	}
-	public static int getColorStartBridge(){
-		try {
-			return Integer.parseInt(color_start_bridge.get().substring(1, 7), 16);
-		} catch (Exception ignored){ }
-		return Integer.parseInt(color_start_bridge.getDefault().substring(1, 7), 16);
-	}
-	public static int getColorCancelBridge(){
-		try {
-			return Integer.parseInt(color_cancel_bridge.get().substring(1, 7), 16);
-		} catch (Exception ignored){ }
-		return Integer.parseInt(color_cancel_bridge.getDefault().substring(1, 7), 16);
-	}
+	// @SubscribeEvent
+	// public static void onCommonSetup(final FMLCommonSetupEvent event) {
+	// 	FMLJavaModLoadingContext.get().getModEventBus().register(ModConfig.class);
+	// }
 }

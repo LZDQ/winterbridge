@@ -40,7 +40,7 @@ public abstract class AbstractBridgeHandler {
     public void setCancelled(String cause){
         mc.player.displayClientMessage(
                 Component.literal("Cancel bridge. Cause: " + cause)
-                        .withStyle(Style.EMPTY.withColor(ModConfig.getColorCancelBridge())),
+                        .withStyle(Style.EMPTY.withColor(0xFF0000)),
                 true
         );
         cancel_cause = cause;

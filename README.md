@@ -2,19 +2,26 @@
 
 This is a bedwars assistant developed by LZDQ. Currently it requires Minecraft 1.19.X and forge.
 
-## functions
+## Requirement
+
+[configured-2.1.1-1.19.4.jar](https://www.curseforge.com/minecraft/mc-mods/configured/files/4462894)
+
+## Functions
 
 1. Ninja bridge
 2. Ninja bridge with increase
 3. Ninja diagonal bridge (with increase)
-4. Sort hotbar
-5. Spam-clicking (both left and right)
-6. Block clutch
-7. //God bridge (caution with this! it will get banned)
-8. Auto switching tools
-9. Quick switching to (and use) items (fireball, tnt, gapple, and so on)
-10. Quick switching to hard blocks
-11. Block-in
+4. Spam-clicking (both left and right)
+5. Block clutch
+6. Switch tools
+7. Quick switching to (and use) items (fireball, tnt, gapple, and so on)
+8. Quick switching to hard blocks
+9. Block-in
+10. Put money into chest
+11. Double-click
+12. Drop money
+13. Block + Ladder clutch
+14. Send 'inc', 'incc' message
 
 ## Usage
 
@@ -53,25 +60,13 @@ For blocks, I slightly suggest binding your hotbar switch button of your block s
 
 ------------
 
-#### sort
-
-Pressing `F4` automatically sorts your hotbar slots. By default, it will place the best sword at slot 1, pickaxe at slot 2, shears at slot 3, axe at slot 4, and blocks with the most count at slot 5. This function swap two items every ~0.5s, you can configure the time interval. It doesn't open up your inventory, and you can move around when sorting if the server is not checking this subtle hack.
-
-You can change the slots config in the mod's config file, but the items to sort are fixed. The list of them is: `sword`, `pickaxe`, `shears`, `axe`, `blocks`, `golden apple`, `fireball`, `ladder`, `bridge egg`, `pop-up tower`. No milk or potion because you always have plenty of time to prepare if you buy them.
-
-In the configure file, change the `slot_*` to whatever slot you want. `-1` means you don't want to sort it, and `[0,8]` means slot from 1 to 9.
-
-However, this feature is useless with the help of automatic switches.
-
------------------
-
 #### block clutch
 
 When holding block, not on the ground, and clicking left button, the mod will try to block clutch. First, it will try to place a block under you. If success, second it will try to place a block based on the first block in the direction of you. So normally when side clutching on a bridge, it will prevent you from falling. However, be caution to use this because it is sending packets of placing blocks instead of rotating and clicking. It won't get banned on BlocksMC for now, but I think it gets banned on Jartex.
 
 -----
 
-#### auto selecting hardest block
+#### select hardest block
 
 Press a key to select the hardest block. Saves a lot time for block-in, cause when you are digging downwards, you will want to use the hardest block (which you gathered from their bed defense) to block other players. This also saves some time when doing your bed defense. Default order: `Obsidian` -> `End Stone` -> `Wood` -> `Clay` -> `Wool`. I realize that there is a better way to decide the order but I don't want to bother to change it.
 
@@ -90,7 +85,7 @@ Tired of typing your password again and again? Now configure your password in th
 ## Other features
 
 * Selecting cheat mode. There are 3 different modes: absolute, relative, slightly (0, 1, 2). The names are just to make sure they are all 8-letter long and look better, like username and password. absolute means there is no anti anti-cheat. slightly means there is only slightly cheats. The key differences between these modes are precision and bridging speed. Using absolute mode 99% makes other players spot you hacking, while using slightly is even a lot slower than myself bridging. By default, absolute, relative, slightly mode wait for 0, 1, 2 ticks after each step. Also, some behaviors like block clutching are disabled in slightly mode. Press `n` to cycle these mode. You can also change the config of default cheat mode.
-* Custom config in `.minecraft/config/winterbridge-config.toml`. You can change slot to place items, default cheat mode, color of bridging prompts, and so on.
+* Configurable, powered by the mod "configured". Go to "Mod" -> "winterbridge" and click "Config".
 * Auto cancelling bridging. When hitted or fell, automatically cancel bridging.
 
 ## Future work
@@ -131,18 +126,6 @@ Large latency: bow, water.
 
 
 
-#### New features:
-
-1. Put all money into chest
-2. Put all useful items back to slots
-3. Two modes: normal, rushing.
-4. Double-click
-5. Drop all money
-6. Block + Ladder clutch
-7. Send 'inc' message
-
-
-
 #### Bug fixes:
 
 1. - [x] Distinguish between TNT and blocks.
@@ -153,7 +136,7 @@ Large latency: bow, water.
 
 #### Specific functions of each key:
 
-|         | Normal                 | Chest                 | Inventory                |
+|         | IN_GAME                | GUI (Chest)           | GUI (Inventory)          |
 | ------- | ---------------------- | --------------------- | ------------------------ |
 | q       | ladder / hardest block | store money           | place money to inventory |
 | e       | tool, KB-stick         | get money             | place money to hotbar    |
@@ -187,18 +170,24 @@ Large latency: bow, water.
 - [x] Sword left spam if hitObject is not player, do not click with a probability
 - [ ] Optimize store money
 
+## Resourcepacks
 
+[cute sanrio terracotta](https://www.curseforge.com/minecraft/texture-packs/clovers-sanrio-glazed-terracotta) change all blazed terracotta to just terracotta (remove all `_blazed` in filename)
 
-## Resourcepack
-
-[Outlined + Connected Terracotta](https://www.planetminecraft.com/texture-pack/outlined-connected-terracotta/)
-
-[wool overlay 1.8.9 manually upgraded to 1.19.4](http://www.mediafire.com/file/bjplir0mtieakng/#3+Wool+Overlay.zip/file)
+[wool overlay 1.8.9 manually upgraded to 1.19.4](http://www.mediafire.com/file/bjplir0mtieakng/#3+Wool+Overlay.zip/file), see [here](https://minecraft.wiki/w/Item_tag_(Java_Edition)#wool) for item tag list
 
 [fullbright](https://www.curseforge.com/minecraft/texture-packs/fullbright)
+
+[planks-reimagined](https://www.planetminecraft.com/texture-pack/planks-reimagined/)
+
+[improved-logs](https://www.curseforge.com/minecraft/texture-packs/improved-logs)
+
+Aimz - PVP Crosshair
+
+## CHANGELOG
+
+See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Configs
 
 FOV: 100
-
-Mouse sensitivity: 90%

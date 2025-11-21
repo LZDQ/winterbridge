@@ -13,8 +13,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 public class ClientModHandler {
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent event){
-		for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values())
+		for (KeyMapping key : ModKeyBindings.INSTANCE.keys.values()){
+			WinterBridge.LOGGER.info("Registering key '{}' with context: {}", key.getName(), key.getKeyConflictContext()); // Add this line
 			event.register(key);
+		}
 	}
 
 	@SubscribeEvent
