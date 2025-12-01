@@ -30,7 +30,6 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.PotionUtils;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -41,7 +40,6 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.level.BlockEvent.BreakEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -182,9 +180,9 @@ public class ClientForgeHandler {
 					isBlock(mc.player.getMainHandItem()) &&
 					mc.options.keyAttack.consumeClick()) {
 				// Holding block and clicking. Block clutch or double-click
-				// If onGround or has block 5 below, do a double-click
-				// otherwise do a block clutch
-				boolean isDoubleClick = mc.player.isOnGround();
+				// If NOT onGround and has block 5 below, do a double-click
+				// otherwise (no block underneath), do a block clutch
+				boolean isDoubleClick = false;
 				BlockPos pos = mc.player.getOnPos();
 				for(int i=0; !isDoubleClick && i<5; i++){
 					if (!mc.level.getBlockState(pos).isAir())
@@ -443,19 +441,6 @@ public class ClientForgeHandler {
 		}
 	}
 
-	private static void swapSlot(int slot_from, int slot_to) {
-		// slot_from is the inventory id (for hotbar, it is [36, 45) )
-		// slot_to is the hotbar id [0, 9)
-		// mc.player.sendOpenInventory();
-		// Inventory inventory = mc.player.getInventory();
-		mc.gameMode.handleInventoryMouseClick(
-				mc.player.inventoryMenu.containerId,
-				slot_from,
-				slot_to,
-				ClickType.SWAP,
-				mc.player);
-	}
-
 	private static void swapMenuSlot(int slot_to) {
 		// slot_to is [0, 8] indicating the inventory slot
 		// Swap it with current menu
@@ -506,6 +491,9 @@ public class ClientForgeHandler {
 				}
 			}
 		} else if (isBlock(mc.player.getMainHandItem())) {
+			// Check there is no jump boost
+			if (mc.player.hasEffect(MobEffects.JUMP))
+				return;
 			// Place a block first, then switch to ladder (if has)
 			if (ActionHandler.placeBlock()){
 				int ticks = ModConfig.ladder_rotate_tick.get();

@@ -172,7 +172,7 @@ Large latency: bow, water.
 
 ## Resourcepacks
 
-[cute sanrio terracotta](https://www.curseforge.com/minecraft/texture-packs/clovers-sanrio-glazed-terracotta) change all blazed terracotta to just terracotta (remove all `_blazed` in filename)
+[cute sanrio terracotta](https://www.curseforge.com/minecraft/texture-packs/clovers-sanrio-glazed-terracotta) change all blazed terracotta to just terracotta (remove all `_blazed` in filename); TODO: change this because some colors are not covered
 
 [wool overlay 1.8.9 manually upgraded to 1.19.4](http://www.mediafire.com/file/bjplir0mtieakng/#3+Wool+Overlay.zip/file), see [here](https://minecraft.wiki/w/Item_tag_(Java_Edition)#wool) for item tag list
 

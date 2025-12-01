@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v2.3
+
+* Disable block clutch if has jump boost.
+* Double block now only works when the player is not on the ground.
+
 ## v2.2
 
 * Add ice bridge keybinding and treat it as non-block.
