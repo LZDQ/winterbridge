@@ -56,7 +56,7 @@ public class ClientForgeHandler {
 	static boolean isDoubleAttack = false;
 	static int spam_left_mode = 1; // 0 - do not spam until hit entity (after switch)  1 - spam
 	static int spam_right_mode = 0; // 0 - Not down  1 - Down but not click  2 - Down and click
-	static long until = 0;
+	static long until = 0, lastBlockinTime = 0;
 	static AbstractBridgeHandler bridgeHandler;
 	static AbstractClutchHandler clutchHandler;
 	static BlockInHandler blockinHandler;
@@ -135,7 +135,9 @@ public class ClientForgeHandler {
 				switchToItem(Items.GOLDEN_APPLE);
 
 			if (ModKeyBindings.INSTANCE.get("ladder_or_def").consumeClick()){
-				if (!switchToItem(Items.LADDER))
+				if (System.currentTimeMillis() <
+						lastBlockinTime + ModConfig.blockin_post_time.get() * 1000
+						|| !switchToItem(Items.LADDER))
 					switchToHardestBlock();
 			}
 
@@ -147,8 +149,10 @@ public class ClientForgeHandler {
 
 			if (ModKeyBindings.INSTANCE.get("blockin").consumeClick()) {
 				cancelled = false;
-				if (blockinHandler == null)
+				if (blockinHandler == null) {
 					blockinHandler = new BlockInHandler();
+					lastBlockinTime = System.currentTimeMillis();
+				}
 			}
 
 			if (ModKeyBindings.INSTANCE.get("drop_money").consumeClick())
@@ -183,11 +187,13 @@ public class ClientForgeHandler {
 				// If NOT onGround and has block 5 below, do a double-click
 				// otherwise (no block underneath), do a block clutch
 				boolean isDoubleClick = false;
-				BlockPos pos = mc.player.getOnPos();
-				for(int i=0; !isDoubleClick && i<5; i++){
-					if (!mc.level.getBlockState(pos).isAir())
-						isDoubleClick = true;
-					pos = pos.below();
+				if (!mc.player.isOnGround()) {
+					BlockPos pos = mc.player.getOnPos();
+					for(int i=0; !isDoubleClick && i<5; i++){
+						if (!mc.level.getBlockState(pos).isAir())
+							isDoubleClick = true;
+						pos = pos.below();
+					}
 				}
 				if (isDoubleClick){
 					if (doubleClickHandler == null)

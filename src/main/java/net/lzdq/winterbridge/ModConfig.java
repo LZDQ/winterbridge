@@ -4,10 +4,7 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -26,7 +23,7 @@ public class ModConfig {
 	public static final ForgeConfigSpec.ConfigValue<List<Double>> yaw_var, pitch_var;
 	public static final ForgeConfigSpec.ConfigValue<String> auto_login_command;
 	public static final ForgeConfigSpec.IntValue spam_left_min, spam_left_max, timeout_doubleclick;
-	public static final ForgeConfigSpec.IntValue blockin_rotate_tick;
+	public static final ForgeConfigSpec.IntValue blockin_rotate_tick, blockin_post_time;
 	public static final ForgeConfigSpec.DoubleValue blockin_offset;
 	public static final ForgeConfigSpec.IntValue delay_sword, delay_double_attack;
 	public static final ForgeConfigSpec.DoubleValue spam_miss_click_prob;
@@ -114,6 +111,10 @@ public class ModConfig {
 		blockin_rotate_tick = BUILDER
 				.comment("Block-in ticks for rotating")
 				.defineInRange("blockin_rotate_tick", 2, 1, 20);
+
+		blockin_post_time = BUILDER
+				.comment("How many seconds after block-in that q directly switches to hardest block")
+				.defineInRange("blockin_post_time", 15, 0, 100);
 
 		ladder_rotate_tick = BUILDER
 				.comment("Block + ladder clutch rotate ticks (after block, before ladder). 0 means disabling rotate")
